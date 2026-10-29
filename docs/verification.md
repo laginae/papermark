@@ -1,12 +1,27 @@
-# Verification for 0.4.0
+# Verification for 0.5.0
 
 The release was checked with synthetic PDFs. No personal research papers are included in the repository or release archives.
 
 ## Automated checks
 
-`npm run fixtures` followed by `npm test` passes 28 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion and searchable export.
+`npm run fixtures` followed by `npm test` passes 35 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion and searchable export.
 
 Language checks cover the English default, stored preference, unavailable browser storage, translation key/placeholder completeness, document language and accessible labels. Searchable export tests cover PDF text extraction, unchanged rendered pixels, retained outlines and annotations, 0/90/180/270-degree rotations with crop offsets, duplicate-layer prevention, disabled text layers, no-heading export and explicitly cleared bookmarks. Chinese spacing normalization retains English word spaces.
+
+New checks cover small-angle deskewing, rejection of body sentences as OCR headings, paired-helper origin/host/connection-code/consent enforcement, bounded ZIP extraction, outbound destination validation, document fingerprints, page geometry, numeric MinerU heading hierarchy and invisible Chinese/English text layers.
+
+## OCR comparison
+
+A fixed four-page synthetic comparison uses clean/degraded English two-column and Chinese single-column pages. Degradation reduces resolution to 100 DPI, rotates 1.2 degrees, blurs, reduces contrast and uses JPEG compression. Character errors are Levenshtein distance after whitespace removal and Unicode normalization.
+
+| Page | Local 0.4.0 errors | Local 0.5.0 errors | MinerU text errors |
+| --- | ---: | ---: | ---: |
+| English, clean | 0 / 833 | 0 / 833 | 0 / 833 |
+| English, degraded | 3 / 833 | 2 / 833 | 0 / 833 |
+| Chinese, clean | 2 / 340 | 0 / 340 | 0 / 340 |
+| Chinese, degraded | 13 / 340 | 12 / 340 | 0 / 340 |
+
+At default sensitivity, 0.4.0 produced 16 correct headings and 9 body-text false positives; 0.5.0 and the MinerU result each produced 16 correct headings and no false positives on these pages. MinerU was tested through the official API with `model_version: vlm`; returned metadata identified backend `hybrid`, version `3.4.4`. These small synthetic samples do not establish accuracy on arbitrary papers, handwriting, formulas or tables. The degraded Chinese page still has local OCR errors.
 
 ## Browser checks
 
@@ -22,14 +37,25 @@ Checked the hosted build and the single-file HTML in Windows Chrome:
 - The hosted build downloads only the fixed same-origin OCR resource JSON with GET and no request body during OCR. No file content, filenames or recognized text are sent. The resource remains about 10 MB, with its expected SHA-256 embedded in the application.
 - The updated welcome controls have no document-level horizontal overflow at a 390-pixel viewport.
 
+Additional 0.5.0 checks:
+
+- MinerU is initially off and both credential fields are empty. Disabling it clears the Token and connection code. Only the language preference is stored. Declining the per-document confirmation sends no PDF request.
+- A real four-page synthetic upload, polling, result application, result saving and searchable export completed through the paired helper. The Token field was cleared on submission; the saved result contains no credentials.
+- Importing that saved result while offline preserves a manually edited outline and does not upload the document.
+- An independent PDF.js reader finds “第一章绪论” in the MinerU export; selection and clipboard paste return exactly that text. Independent pypdf extraction verifies the comparison text above.
+- The local and MinerU exports retain original image bytes, content streams, page boxes and rotations. The checked Poppler render is pixel-identical.
+- The standalone 0.5.0 HTML completes local OCR and export with the browser offline before first open, retaining a two-page Chinese scan's original parent/child bookmarks and annotation.
+
+Optional MinerU processing requires a local Node.js connection helper because the official API's cross-origin restrictions prevent direct browser calls. Browser local-network policy may require permission. No public proxy or shared Token is provided. Platforms without the helper can use local OCR or saved-result import. Search selection is approximate where only paragraph boxes are returned; existing PDF text layers are retained, so improving an old OCR layer requires reopening the original scan.
+
 These checks do not establish accuracy on every paper layout or full compatibility with every browser/operating system. Other desktop operating systems and mobile file-opening behavior were not verified for this release.
 
-The image-only fixture can be reproduced after `npm run fixtures` using `python scripts/ocr-chinese-fixture.py` (Pillow, reportlab and a supported Chinese font required), then `node scripts/ocr-fixtures.cjs`. Generated PDFs stay under the ignored `qa/fixtures/` directory. The fixtures use upright, legible print and do not measure OCR quality on degraded scans. OCR text can contain errors, and selection/reading order is approximate for complex layouts; the original scan remains the source to check.
+The basic image-only fixture can be reproduced after `npm run fixtures` using `python scripts/ocr-chinese-fixture.py` (Pillow, reportlab and a supported Chinese font required), then `node scripts/ocr-fixtures.cjs`. Generated PDFs stay under the ignored `qa/fixtures/` directory. Those basic fixtures use upright, legible print; the separate comparison above includes degraded pages. OCR text can contain errors, and selection/reading order is approximate for complex layouts; the original scan remains the source to check.
 
 ## Publication checks
 
-The publication allowlist contains source, tests, build scripts, documentation, reviewed empty-interface screenshots, licenses, both built HTML variants and the OCR resource bundle. It excludes dependencies, generated test PDFs, browser profiles, logs, local configuration, temporary files and private diagnostics.
+The publication allowlist contains source, tests, build scripts, documentation, reviewed empty-interface screenshots, licenses, both built HTML variants, the OCR resource bundle and the standalone helper. It excludes dependencies, generated test PDFs, browser profiles, logs, local configuration, temporary files and private diagnostics.
 
-`npm run audit:public` checks common absolute-path, private-address and credential patterns, UTF-8 decoding, screenshot metadata, dependency registry URLs and all three build hashes. This is a bounded publication check, not a comprehensive security audit. Required upstream license notices retain their public author information. `npm audit` reported zero known dependency vulnerabilities at release verification.
+`npm run audit:public` checks common absolute-path, private-address and credential patterns, UTF-8 decoding, screenshot metadata, dependency registry URLs and all four build hashes. The specific private test credentials are also compared against public files and release members without logging their values. This is a bounded publication check, not a comprehensive security audit. Required upstream license notices retain their public author information.
 
 `npm run package` reopens each ZIP, checks paths and publication patterns, and compares every archived file with its source bytes. SHA-256 checksums are included with the release assets.

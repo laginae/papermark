@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+- Improved local scan preprocessing with higher-resolution recognition, contrast adjustment and bounded deskewing, while retaining the original PDF pages and coordinate mapping.
+- Separated OCR heading detection from selectable-text typography, filtering body sentences and retaining numbered headings in conservative mode.
+- Added optional MinerU high precision, disabled by default, with an empty per-user API Token field and confirmation before each whole-document upload.
+- Added a paired loopback-only connection helper for the static site; no shared Token, public relay or persistent credential storage.
+- Added fingerprint-bound result save/import, Unicode searchable text layers, local line-position alignment and retained original/edited outlines.
+- Added tests for upload consent, origin/host restrictions, pairing, destination restrictions, result validation, Unicode extraction, unchanged rendering and deskew geometry.
+
 ## 0.4.0
 
 - Added searchable PDF export, enabled by default: invisible Unicode OCR text supports search, selection and copying in PDF readers.

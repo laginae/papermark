@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md)
 
-Give research papers a clickable outline. PaperMark detects section headings in PDFs, lets you review and edit the bookmarks, and exports a new PDF. It runs locally in your browser, including without an internet connection.
+Give research papers a clickable outline. PaperMark detects section headings in PDFs, lets you review and edit the bookmarks, and exports a new PDF. The default mode runs locally in your browser, including without an internet connection. Optional MinerU processing requires a separate upload confirmation.
 
 ## Open online or download
 
@@ -39,11 +39,15 @@ Review the generated headings and destinations before exporting. OCR bookmarks a
 
 Pages with at least 30 non-whitespace characters already extracted are skipped for text-layer insertion. Reopened PaperMark text layers are also protected against duplication. Manual OCR can help detect headings from a poor old text layer, but does not replace that layer. A canceled or partially failed OCR run adds text only to completed pages.
 
-OCR is intended for upright, legible printed text. Blurry, skewed, complex or handwritten pages may be misread; check important quotations against the image. Selection follows approximate OCR bounds, and columns or tables may copy in a different reading order. Large files and mobile devices can be slow.
+Local OCR uses higher-resolution images, contrast adjustment and correction of small tilts (up to about four degrees), without altering the original PDF. It is intended for legible printed text. Blurry, skewed, complex or handwritten pages may be misread; check important quotations against the image. Selection follows approximate OCR bounds, and columns or tables may copy in a different reading order. Large files and mobile devices can be slow.
+
+## Optional MinerU high precision
+
+Disabled by default. Every user enters their own API Token; it is never embedded in the app or saved. A paired local connection helper handles official-service requests for the static website. Confirm each document before upload. Existing or edited outlines and original page images are retained. See [setup, privacy and limitations](docs/mineru.md). Saved results can be imported locally into the same original PDF.
 
 ## Privacy and file handling
 
-PDF processing and OCR happen in browser memory. The app has no upload endpoint, telemetry or account system. Only the language preference is written to browser storage; PDF data and OCR text are not stored in IndexedDB or local storage. Refreshing or closing the page loses loaded files and edits.
+In the default local mode, PDF processing and OCR happen in browser memory without uploads. Optional MinerU mode uploads only after explicit per-file confirmation, using the user's own Token. There is no shared Token or telemetry. Only the language preference is written to browser storage; PDF data and OCR text are not stored in IndexedDB or local storage. Refreshing or closing the page loses loaded files and edits.
 
 The online version downloads the static application from GitHub Pages. The first OCR operation in a tab also loads about 10 MB of fixed recognition resources from the same site and verifies their SHA-256 hash. These requests contain no PDF contents, filename or recognized text. Once these resources are loaded, OCR can continue without a connection while the tab stays open. The OCR worker uses bundled data and rejects external resource requests. GitHub receives ordinary requests for the site files, as with any hosted web page.
 
@@ -59,7 +63,7 @@ Adding bookmarks is **not anonymization**: existing PDF metadata, text and annot
 - Detection is heuristic and needs review, especially for unusual layouts. It does not insert a printed table-of-contents page.
 - Encrypted PDFs, signed PDFs, writing restrictions and unsupported original outline targets prevent export.
 - Limits: 100 MB and 2,000 pages per PDF; 20 files and 250 MB total; up to 1,000 new bookmarks. Large files can use substantially more memory than their file size.
-- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.4.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
+- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.5.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
 - Page numbers are physical PDF pages, starting at 1, rather than printed page labels.
 
 ## Build from source
@@ -79,7 +83,7 @@ Open `dist/PaperMark.html`, or use `npm run serve` and the local URL it prints. 
 
 ## GitHub Pages deployment
 
-The Pages workflow checks build hashes and audits public files, then publishes `dist/index.html`, the hashed OCR resource JSON, the build manifest and the license. The web HTML differs from `PaperMark.html`: it loads the OCR resource bundle on demand. There is no server component or upload API. The manifest records separate hashes for the standalone HTML, web HTML and OCR resources.
+The Pages workflow checks build hashes and audits public files, then publishes `dist/index.html`, the hashed OCR resource JSON, the build manifest and the license. The web HTML differs from `PaperMark.html`: it loads the OCR resource bundle on demand. GitHub Pages has no server component or upload API; optional MinerU mode uses the separately downloaded local helper. The manifest records separate hashes for the standalone HTML, web HTML and OCR resources.
 
 After changing the app, build it and commit the updated `dist/` files to `main`; the workflow deploys automatically. It also supports manual dispatch. In a fork, enable **Settings → Pages → Source → GitHub Actions** before running the workflow. `node scripts/prepare-pages.cjs` prepares the same site locally under the ignored `_site/` directory.
 

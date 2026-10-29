@@ -13,6 +13,7 @@
     <div class="top-actions"><span class="privacy"><i></i><span data-i18n="privacy">Files stay on your device</span></span><div class="language-switch" role="group" aria-label="Language / 语言"><button type="button" data-language="en" aria-pressed="true" lang="en">English</button><button type="button" data-language="zh-CN" aria-pressed="false" lang="zh-CN">中文</button></div><button id="help" class="quiet" data-i18n="help">How to use</button><button id="open" class="primary" data-i18n="open">＋ Add PDFs</button></div>
   </header>
   <input id="files" type="file" accept=".pdf,application/pdf" multiple="" hidden="">
+  <input id="mineru-file" type="file" accept=".json,application/json" hidden="">
   <main>
     <section class="processing-settings" aria-label="OCR settings" data-i18n-aria-label="ocr.settings">
       <label class="check-label"><input id="auto-ocr" type="checkbox" checked=""><span data-i18n="ocr.auto">Auto OCR scanned pages</span></label>
@@ -21,6 +22,26 @@
       <button id="ocr-run" class="outline-button small" data-i18n="ocr.run" disabled="">Run local OCR</button>
       <label class="check-label"><input id="searchable" type="checkbox" checked=""><span data-i18n="ocr.searchable">Export searchable PDF</span></label>
       <span class="ocr-privacy" data-i18n="ocr.privacy">Only recognition resources are downloaded. Your PDF stays here.</span>
+    </section>
+    <section class="mineru-settings" aria-label="MinerU" >
+      <label class="check-label"><input id="mineru-enabled" type="checkbox"><span data-i18n="mineru.enable">Enable MinerU high precision · online, optional</span></label>
+      <div id="mineru-panel" hidden="">
+        <p class="mineru-warning" data-i18n="mineru.warning">Online mode uploads the selected PDF to MinerU. Use your own API Token. Nothing is uploaded until you confirm each file.</p>
+        <details><summary data-i18n="mineru.setup">Connect the local helper</summary>
+          <ol><li><a href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-helper.cjs" target="_blank" rel="noopener noreferrer" data-i18n="mineru.download">Download the connection helper</a><span data-i18n="mineru.start">. With Node.js 22 or later installed, run: </span><code>node PaperMark-MinerU-helper.cjs</code></li>
+          <li data-i18n="mineru.pairHelp">Keep its window open, paste the connection code below, then connect. Allow local network access if your browser asks. This code is not your API Token.</li></ol>
+          <p data-i18n="mineru.helperPrivacy">The helper runs only on your computer and forwards requests to the official MinerU service. There is no shared account or public relay. Local OCR works without it.</p>
+        </details>
+        <div class="mineru-fields">
+          <label><span data-i18n="mineru.code">Helper connection code</span><input id="mineru-code" type="password" autocomplete="off" spellcheck="false" maxlength="48"></label>
+          <button id="mineru-connect" class="outline-button small" data-i18n="mineru.connect">Connect</button><span id="mineru-connection-status" role="status"></span>
+          <label><span data-i18n="mineru.token">Your MinerU API Token</span><input id="mineru-token" type="password" autocomplete="off" spellcheck="false" maxlength="2048"></label>
+          <a href="https://mineru.net/apiManage/token" target="_blank" rel="noopener noreferrer" data-i18n="mineru.getToken">Get your own Token</a>
+        </div>
+        <p class="mineru-note" data-i18n="mineru.tokenPrivacy">The Token stays in memory for this task, is cleared from the field on submission, and is never saved. Use your own quota. Keep important text checked against the scan.</p>
+        <div class="mineru-actions"><button id="mineru-run" class="primary small" data-i18n="mineru.run" disabled="">Review upload & run MinerU</button><button id="mineru-import" class="outline-button small" data-i18n="mineru.import" disabled="">Import saved MinerU result</button><button id="mineru-save" class="quiet small" data-i18n="mineru.save" disabled="">Save MinerU result</button></div>
+        <p class="mineru-note" data-i18n="mineru.resultHelp">Saved results contain document text and are matched to the original PDF. Importing is local. Original pages and existing or edited bookmarks are retained; search and copy use an invisible text layer. Selection positions can be approximate.</p>
+      </div>
     </section>
     <section id="welcome" class="welcome">
       <div class="hero-copy"><span class="eyebrow" data-i18n="hero.eyebrow">A SMALL TOOL FOR DEEP READING</span><h1><span data-i18n="hero.first" class="hero-first">Give papers</span><br><span data-i18n="hero.last">an outline.</span></h1><p><span data-i18n="hero.intro">Turn section headings into clickable PDF bookmarks.</span><br><span data-i18n="hero.detail">Find your way back to the ideas that matter.</span></p>

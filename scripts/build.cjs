@@ -49,7 +49,7 @@ const escapeHtml = text => text.replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
         contents: `export default ${JSON.stringify(args.path === 'embedded-worker' ? worker.outputFiles[0].text : args.path==='embedded-resources' ? resources : {data:standalone ? ocr : null,file:ocrFile,sha256:ocrHash})}`, loader: 'js' }));
     } }] });
   // The replacement callback avoids interpreting dollar sequences in bundled code.
-  return template.replace('/* APP_STYLES */', () => read('src/styles.css'))
+  return template.replace('/* APP_STYLES */', () => read('src/styles.css')+'\n'+read('src/mineru.css'))
     .replaceAll('{{VERSION}}', pkg.version)
     .replace('/* THIRD_PARTY_LICENSES */', () => escapeHtml(licenseTexts.join('\n\n')))
     .replace('/* APP_SCRIPT */', () => result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script'));
@@ -57,9 +57,12 @@ const escapeHtml = text => text.replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
   const html=await buildHtml(true), web=await buildHtml(false);
   fs.writeFileSync(path.join(root,'dist/PaperMark.html'), html, 'utf8');
   fs.writeFileSync(path.join(root,'dist/index.html'), web, 'utf8');
+  await esbuild.build({entryPoints:[path.join(root,'scripts/mineru-helper.cjs')],bundle:true,platform:'node',format:'cjs',target:'node22',minify:true,legalComments:'inline',outfile:path.join(root,'dist/PaperMark-MinerU-helper.cjs')});
+  const helper=fs.readFileSync(path.join(root,'dist/PaperMark-MinerU-helper.cjs'));
   const manifest = { app: 'PaperMark', version: pkg.version, bytes: Buffer.byteLength(html),
     sha256: crypto.createHash('sha256').update(html).digest('hex'), offlineResources: Object.keys(resources).length,
     dependencies: pkg.dependencies,
+    helper:{file:'PaperMark-MinerU-helper.cjs',bytes:helper.length,sha256:crypto.createHash('sha256').update(helper).digest('hex')},
     web:{file:'index.html',bytes:Buffer.byteLength(web),sha256:crypto.createHash('sha256').update(web).digest('hex')},
     ocr:{file:ocrFile,bytes:Buffer.byteLength(ocrJson),sha256:ocrHash} };
   fs.writeFileSync(path.join(root,'dist/build-manifest.json'), JSON.stringify(manifest,null,2) + '\n');

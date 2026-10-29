@@ -21,8 +21,10 @@ function pack(label,names,transform) {
   }
   const filename=`PaperMark-${version}-${label}.zip`;fs.writeFileSync(path.join(out,filename),bytes);return filename;
 }
-const assets=[pack('offline',offline,name=>name.replace(/^dist\//,'')),pack('source',source,name=>`PaperMark-${version}/${name}`),'PaperMark.html'];
+offline.push('dist/PaperMark-MinerU-helper.cjs');
+const assets=[pack('offline',offline,name=>name.replace(/^dist\//,'')),pack('source',source,name=>`PaperMark-${version}/${name}`),'PaperMark.html','PaperMark-MinerU-helper.cjs'];
 fs.copyFileSync(path.join(root,'dist/PaperMark.html'),path.join(out,'PaperMark.html'));
+fs.copyFileSync(path.join(root,'dist/PaperMark-MinerU-helper.cjs'),path.join(out,'PaperMark-MinerU-helper.cjs'));
 const lines=assets.map(name=>crypto.createHash('sha256').update(fs.readFileSync(path.join(out,name))).digest('hex')+'  '+name);
 fs.writeFileSync(path.join(out,'SHA256SUMS.txt'),lines.join('\n')+'\n');
 console.log(JSON.stringify({version,assets:[...assets,'SHA256SUMS.txt'],archives:'reopened, audited and byte-compared'},null,2));

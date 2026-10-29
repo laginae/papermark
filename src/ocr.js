@@ -50,7 +50,7 @@ export async function createLocalOcr({language='eng+chi_sim',signal,progress=()=
     // fetch/importScripts implementations reject every other destination.
     await call('loadLanguage',{langs:language,options:{langPath:'https://papermark.invalid/ocr',cacheMethod:'none',gzip:true,lstmOnly:true}});
     await call('initialize',{langs:language,oem:1,config:{}});
-    await call('setParameters',{params:{tessedit_pageseg_mode:'3',user_defined_dpi:'180'}});
+    await call('setParameters',{params:{tessedit_pageseg_mode:'3',user_defined_dpi:'300'}});
     return {
       recognize:async canvas=>{
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));

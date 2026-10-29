@@ -5,6 +5,10 @@ import { zipSync } from 'fflate';
 import { scanPdfOutline } from './pdf-outline';
 import { detectWithOcr, ocrLayout } from './ocr-layout';
 import { createLocalOcr } from './ocr';
+import {prepareOcrCanvas} from './ocr-preprocess';
+import {createMineruClient} from './mineru-client';
+import {mineruLayouts} from './mineru-layout';
+import {createUnicodeTextLayer} from './unicode-text-layer';
 import { loadWritablePdf } from './pdf-bookmarks';
 import { exportPdf } from './pdf-export';
 import { textLayerPages } from './pdf-text-layer';
@@ -17,6 +21,7 @@ restoreLanguage(languageStorage());
 const records = []; let current = null, scanning = false, exporting = false, cancelled = false;
 let nextId = 1, selection = -1, currentPage = 1, zoom = 1, renderTask = null, renderGeneration = 0;
 let viewport = null, locating = false, toastTimer, renderTimer, ocrAbort = null;
+let mineruClient=null;
 const workerUrl = URL.createObjectURL(new Blob([workerCode], { type: 'text/javascript' }));
 class EmbeddedBinaryDataFactory {
   async fetch({ kind, filename }) {
@@ -92,6 +97,11 @@ function setControls() {
   $('open').disabled = $('add-more').disabled = busy();
   $('auto-ocr').disabled = $('ocr-language').disabled = $('ocr-range').disabled = busy();
   $('searchable').disabled = busy();
+  $('mineru-enabled').disabled=busy();
+  for(const id of ['mineru-code','mineru-token','mineru-connect'])$(id).disabled=busy();
+  $('mineru-run').disabled=!ready||!current?.writable||busy()||!mineruClient||!$('mineru-enabled').checked;
+  $('mineru-import').disabled=!ready||!current?.writable||busy()||!$('mineru-enabled').checked;
+  $('mineru-save').disabled=busy()||!current?.mineruResult;
   $('ocr-run').disabled = !ready || busy();
   $('export').disabled = !ready || !canExport(current) || busy();
   $('export-all').disabled = busy() || !records.some(canExport);
@@ -311,21 +321,34 @@ async function performOcr(doc, all = false) {
     for (const n of candidates) {
       controller.signal.throwIfAborted(); pageNumber=n; update('ocr.progress');
       const pdfPage=await doc.pdf.getPage(n), base=pdfPage.getViewport({scale:1});
-      const scale=Math.min(2.5,Math.sqrt(4000000/(base.width*base.height)));
-      const view=pdfPage.getViewport({scale}), canvas=document.createElement('canvas');
+      const scale=Math.min(240/72,Math.sqrt(6000000/(base.width*base.height)));
+      let view=pdfPage.getViewport({scale});const canvas=document.createElement('canvas');
       canvas.width=Math.ceil(view.width); canvas.height=Math.ceil(view.height);
-      const task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:view,annotationMode:pdfjs.AnnotationMode.DISABLE});
+      let task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:view,annotationMode:pdfjs.AnnotationMode.DISABLE});
       const abortRender=()=>task.cancel(); controller.signal.addEventListener('abort',abortRender,{once:true});
       try {
         await task.promise; controller.signal.throwIfAborted();
-        const result=await engine.recognize(canvas); controller.signal.throwIfAborted();
-        const layout=ocrLayout(result,doc.model.pages[n-1],view);
+        let prepared=await prepareOcrCanvas(canvas,view);controller.signal.throwIfAborted();
+        let result;try{result=await engine.recognize(prepared.canvas);}finally{prepared.canvas.width=prepared.canvas.height=1;}
+        let pixelWidth=canvas.width,pixelHeight=canvas.height;
+        // More pixels are not always more accurate. Retry weak pages, keeping
+        // the first pass unless the engine's confidence actually improves.
+        if((result.confidence||0)<88){
+          const high=pdfPage.getViewport({scale:Math.min(300/72,Math.sqrt(9000000/(base.width*base.height)))});
+          canvas.width=Math.ceil(high.width);canvas.height=Math.ceil(high.height);
+          task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:high,annotationMode:pdfjs.AnnotationMode.DISABLE});await task.promise;
+          const retry=await prepareOcrCanvas(canvas,high);let candidate;
+          try{candidate=await engine.recognize(retry.canvas);}finally{retry.canvas.width=retry.canvas.height=1;}
+          if(candidate.confidence>(result.confidence||0)+1){result=candidate;prepared=retry;pixelWidth=canvas.width;pixelHeight=canvas.height;}
+        }
+        controller.signal.throwIfAborted();
+        const layout=ocrLayout(result,doc.model.pages[n-1],prepared.viewport);
         const chars=doc.model.pages.reduce((sum,p)=>sum+(p.number===n ? 0 : (p.ocrLayout?.text.length ?? p.text.length)),0)+layout.text.length;
         if(chars>5000000) throw uiError('error.textLimit');
         doc.model.pages[n-1].ocrLayout=layout;
         doc.model.pages[n-1].ocrPdf=result.pdf;
-        doc.model.pages[n-1].ocrPixelWidth=canvas.width;
-        doc.model.pages[n-1].ocrPixelHeight=canvas.height;
+        doc.model.pages[n-1].ocrPixelWidth=pixelWidth;
+        doc.model.pages[n-1].ocrPixelHeight=pixelHeight;
         doc.ocrChanged=true;
         update('ocr.progress',1);
       } finally {
@@ -352,6 +375,55 @@ async function runOcr() {
     doc.status='ready';scanning=false;
     if(current===doc) selectDocument(doc); else renderQueue(); setControls();
   }
+}
+async function applyMineruResult(doc,envelope) {
+  const viewports=[];for(let n=1;n<=doc.pdf.numPages;n++)viewports.push((await doc.pdf.getPage(n)).getViewport({scale:1}));
+  const layouts=mineruLayouts(envelope,doc.model.pages,viewports,doc.fingerprint),pending=[];
+  for(const layout of layouts){
+    ocrAbort?.signal.throwIfAborted();
+    const page=doc.model.pages[layout.number-1];
+    // Existing source text stays intact; recognized scan text is replaced in
+    // memory and written only once when a new PDF is exported.
+    const pdf=(page.text||'').replace(/\s/g,'').length<30&&layout.text.trim()?await createUnicodeTextLayer(layout):null;
+    pending.push({page,layout,pdf});await tick();
+  }
+  ocrAbort?.signal.throwIfAborted();
+  const keepOutline=doc.model.bookmarks.length>0||doc.dirty;
+  for(const {page,layout,pdf} of pending){page.ocrLayout=layout;page.ocrPdf=pdf;page.ocrPixelWidth=layout.width;page.ocrPixelHeight=layout.height;}
+  doc.model.detected=detectWithOcr(doc.model.pages,{sensitivity:doc.sensitivity});
+  if(!keepOutline){doc.history.push({entries:clone(doc.entries),selection:doc.selected??0,dirty:doc.dirty});doc.entries=clone(doc.model.detected);doc.selected=doc.entries.length?0:-1;}
+  doc.mineruResult=envelope;doc.ocrChanged=true;doc.ocrWarning=null;
+}
+async function runMineru() {
+  if(busy()||!current?.writable||!current?.model||!mineruClient||!$('mineru-enabled').checked)return;
+  const doc=current;if(doc.pdf.numPages>200){toast(t('mineru.limit'),true);return;}
+  let token=$('mineru-token').value.trim();
+  if(!/^[A-Za-z0-9_.+=/-]{20,2048}$/.test(token)){toast(t('mineru.tokenError'),true);return;}
+  if(!confirm(t('mineru.confirm',{name:doc.name,pages:doc.pdf.numPages})))return;
+  const controller=new AbortController();ocrAbort=controller;scanning=true;cancelled=false;doc.status='loading';doc.progress={key:'mineru.uploading'};setControls();refreshStatus();
+  $('mineru-token').value='';
+  try{
+    const envelope=await mineruClient.recognize(doc.bytes,token,controller.signal,phase=>{
+      doc.progress={key:phase==='uploading'?'mineru.uploading':'mineru.processing'};if(current===doc)refreshStatus();
+    });token='';
+    // Local line positions improve selection alignment for a document that
+    // was opened with automatic OCR off. No additional uploads occur here.
+    if(doc.model.imagePages.some(n=>!doc.model.pages[n-1].ocrLayout)){
+      await performOcr(doc);ocrAbort=controller;if(cancelled)controller.abort();controller.signal.throwIfAborted();
+    }
+    doc.progress={key:'mineru.applying'};if(current===doc)refreshStatus();
+    await applyMineruResult(doc,envelope);toast(t('mineru.done'));
+  }catch(error){doc.ocrWarning=controller.signal.aborted?uiError('mineru.cancelled'):error?.i18nKey?error:uiError('mineru.failed');}
+  finally{token='';ocrAbort=null;scanning=false;doc.status='ready';if(current===doc)selectDocument(doc);else renderQueue();setControls();}
+}
+async function importMineru(file) {
+  if(!file||busy()||!current?.model||!current.writable||!$('mineru-enabled').checked)return;
+  const doc=current;
+  if(file.size>40*1024**2){toast(t('mineru.invalid'),true);return;}
+  scanning=true;cancelled=false;ocrAbort=new AbortController();doc.status='loading';doc.progress={key:'mineru.applying'};setControls();refreshStatus();
+  try{const envelope=JSON.parse(await file.text());await applyMineruResult(doc,envelope);toast(t('mineru.done'));}
+  catch(error){toast(friendlyError(error?.i18nKey?error:uiError('mineru.invalid')),true);}
+  finally{ocrAbort=null;scanning=false;doc.status='ready';if(current===doc)selectDocument(doc);else renderQueue();}
 }
 function rescan() {
   if (busy() || !current?.model) return;
@@ -427,6 +499,25 @@ document.addEventListener('drop', event => { event.preventDefault(); dragDepth =
 $('export').onclick = exportCurrent; $('export-all').onclick = exportAll;
 $('rescan').onclick = rescan; $('add-bookmark').onclick = addBookmark;
 $('ocr-run').onclick = runOcr;
+$('mineru-run').onclick=runMineru;
+$('mineru-enabled').onchange=()=>{
+  $('mineru-panel').hidden=!$('mineru-enabled').checked;
+  if(!$('mineru-enabled').checked){mineruClient=null;$('mineru-code').value='';$('mineru-token').value='';}
+  refreshMineru();setControls();
+};
+$('mineru-code').oninput=()=>{mineruClient=null;refreshMineru();setControls();};
+$('mineru-connect').onclick=async()=>{
+  try{const client=createMineruClient($('mineru-code').value);await client.check();mineruClient=client;toast(t('mineru.connected'));}
+  catch(error){mineruClient=null;toast(friendlyError(error),true);}refreshMineru();setControls();
+};
+$('mineru-import').onclick=()=>$('mineru-file').click();
+$('mineru-file').onchange=event=>{importMineru(event.target.files[0]);event.target.value='';};
+$('mineru-save').onclick=()=>{if(current?.mineruResult)download(new TextEncoder().encode(JSON.stringify(current.mineruResult)),safeFilename(current.name,'.mineru.json'),'application/json');};
+function refreshMineru(){
+  $('mineru-connection-status').textContent=t(mineruClient?'mineru.connected':'mineru.disconnected');
+  const enabled=$('mineru-enabled').checked;
+  document.querySelector('.privacy [data-i18n]').textContent=t(enabled?'mineru.privacyBadge':'privacy');
+}
 for (const id of ['entry-title','entry-level','entry-page','entry-position']) $(id).onchange = () => editField(id);
 $('move-up').onclick = () => moveEntry(-1); $('move-down').onclick = () => moveEntry(1);
 $('delete').onclick = () => {
@@ -495,6 +586,7 @@ function refreshLanguage() {
     $('preview-tip').textContent = t('previewTip');
   }
   setControls();
+  refreshMineru();
 }
 for(const button of document.querySelectorAll('[data-language]')) button.onclick = () => {
   if(!busy() && entry()) for(const field of ['entry-title','entry-page','entry-position']) {

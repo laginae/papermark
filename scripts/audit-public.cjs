@@ -34,8 +34,8 @@ function audit() {
   const manifest=JSON.parse(fs.readFileSync(path.join(root,'dist/build-manifest.json'),'utf8'));
   const html=fs.readFileSync(path.join(root,'dist/PaperMark.html'));
   if(crypto.createHash('sha256').update(html).digest('hex')!==manifest.sha256) throw new Error('Build manifest mismatch');
-  for(const entry of [manifest.web,manifest.ocr]) {
-    if(!entry || !/^(?:index\.html|ocr-resources-[a-f0-9]{12}\.json)$/.test(entry.file)) throw new Error('Invalid web asset');
+  for(const entry of [manifest.web,manifest.ocr,manifest.helper]) {
+    if(!entry || !/^(?:index\.html|PaperMark-MinerU-helper\.cjs|ocr-resources-[a-f0-9]{12}\.json)$/.test(entry.file)) throw new Error('Invalid web asset');
     const bytes=fs.readFileSync(path.join(root,'dist',entry.file));
     if(bytes.length!==entry.bytes || crypto.createHash('sha256').update(bytes).digest('hex')!==entry.sha256) throw new Error('Web asset mismatch');
   }
