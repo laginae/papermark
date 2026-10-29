@@ -22,6 +22,7 @@ The interface starts in **English**. Use the **English / 中文** buttons in the
 
 - English and Chinese heading detection using numbering, font size and page layout.
 - Local OCR for scanned pages, with English and Simplified Chinese models, progress and cancellation.
+- Searchable PDF export with selectable, copyable OCR text, preserving page images and existing bookmarks.
 - Balanced and conservative detection, with uncertain candidates marked for review.
 - Page preview, editable nested bookmarks and click-to-position destinations.
 - Load existing bookmarks, undo edits and save/load outline JSON for the same original PDF.
@@ -30,11 +31,15 @@ The interface starts in **English**. Use the **English / 中文** buttons in the
 
 ## Scanned PDFs
 
-**Auto OCR scanned pages** is enabled by default. Before adding a PDF, choose English, Simplified Chinese or both under **OCR language**. A document without an existing outline is checked for pages with little extractable text; these pages are rendered and recognized locally. Existing outlines are loaded without automatic OCR.
+**Auto OCR scanned pages** is enabled by default. Before adding a PDF, choose English, Simplified Chinese or both under **OCR language**. Pages with little extractable text are rendered and recognized locally, including in documents that already have bookmarks. Existing bookmarks are retained.
 
-Review the generated headings and destinations before exporting. OCR bookmarks are marked for review. **Cancel** stops recognition and keeps completed pages. **Run local OCR → Unprocessed scans** resumes remaining pages; choose **All pages** to repeat recognition with another language or process a poor text layer. Rebuilding an existing outline asks for confirmation and can be undone.
+Review the generated headings and destinations before exporting. OCR bookmarks are marked for review. **Cancel** stops recognition and keeps completed pages. **Run local OCR → Unprocessed scans** resumes remaining pages; choose **All pages** to repeat recognition with another language. OCR keeps original and manually edited bookmarks. Use **Detect again** to deliberately rebuild the outline; that action asks for confirmation and can be undone.
 
-OCR is intended for upright, legible printed text. Blurry, skewed, complex or handwritten pages may need manual correction. It can be slow, particularly on large PDFs or mobile devices. OCR is used to create bookmarks; it does not add a searchable text layer or alter the scanned page images.
+**Export searchable PDF** is enabled by default. Export adds an invisible Unicode text layer to completed scan pages while retaining the original page images, page geometry, annotations and current bookmarks. Open the downloaded PDF in a PDF reader to search, select and copy text. The app's canvas preview is for checking page appearance and bookmarks. Export is also available when OCR finds text but no headings. Turn the option off to export bookmarks only.
+
+Pages with at least 30 non-whitespace characters already extracted are skipped for text-layer insertion. Reopened PaperMark text layers are also protected against duplication. Manual OCR can help detect headings from a poor old text layer, but does not replace that layer. A canceled or partially failed OCR run adds text only to completed pages.
+
+OCR is intended for upright, legible printed text. Blurry, skewed, complex or handwritten pages may be misread; check important quotations against the image. Selection follows approximate OCR bounds, and columns or tables may copy in a different reading order. Large files and mobile devices can be slow.
 
 ## Privacy and file handling
 
@@ -54,7 +59,7 @@ Adding bookmarks is **not anonymization**: existing PDF metadata, text and annot
 - Detection is heuristic and needs review, especially for unusual layouts. It does not insert a printed table-of-contents page.
 - Encrypted PDFs, signed PDFs, writing restrictions and unsupported original outline targets prevent export.
 - Limits: 100 MB and 2,000 pages per PDF; 20 files and 250 MB total; up to 1,000 new bookmarks. Large files can use substantially more memory than their file size.
-- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.3.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
+- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.4.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
 - Page numbers are physical PDF pages, starting at 1, rather than printed page labels.
 
 ## Build from source

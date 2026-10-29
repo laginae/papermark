@@ -5,7 +5,9 @@ import { zipSync } from 'fflate';
 import { scanPdfOutline } from './pdf-outline';
 import { detectWithOcr, ocrLayout } from './ocr-layout';
 import { createLocalOcr } from './ocr';
-import { loadWritablePdf, writePdfBookmarks } from './pdf-bookmarks';
+import { loadWritablePdf } from './pdf-bookmarks';
+import { exportPdf } from './pdf-export';
+import { textLayerPages } from './pdf-text-layer';
 import { validateEntries, safeFilename, uniqueFilename } from './model';
 import { t, getLanguage, restoreLanguage, saveLanguage, translateDom, uiError, reasonLabel } from './i18n';
 
@@ -26,6 +28,8 @@ class EmbeddedBinaryDataFactory {
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 const clone = value => JSON.parse(JSON.stringify(value));
 const busy = () => scanning || exporting;
+const hasTextExport = doc => $('searchable').checked && !!doc?.model && textLayerPages(doc.model.pages).length>0;
+const canExport = doc => doc?.writable && doc?.model && !doc.error && (doc.entries.length>0 || hasTextExport(doc));
 const entry = () => current?.entries?.[selection];
 function toast(message, error = false) {
   clearTimeout(toastTimer); $('toast').textContent = message; $('toast').classList.toggle('error', error);
@@ -55,6 +59,7 @@ function refreshStatus() {
   if (current.ocrWarning) messages.push(friendlyError(current.ocrWarning));
   const ocrPages=current.model.pages.filter(page=>page.ocrLayout).length;
   if(ocrPages) messages.push(t('ocr.done',{count:ocrPages}));
+  if(ocrPages && $('searchable').checked) messages.push(t('ocr.searchableReady',{count:textLayerPages(current.model.pages).length}));
   if (current.model.unsupportedBookmarks) messages.push(t('status.unsupported'));
   const missing=current.model.imagePages.filter(n=>!current.model.pages[n-1].ocrLayout);
   if (missing.length) {
@@ -86,9 +91,10 @@ function setControls() {
   const ready = current?.model && current?.status === 'ready';
   $('open').disabled = $('add-more').disabled = busy();
   $('auto-ocr').disabled = $('ocr-language').disabled = $('ocr-range').disabled = busy();
+  $('searchable').disabled = busy();
   $('ocr-run').disabled = !ready || busy();
-  $('export').disabled = !ready || !current?.writable || !current?.entries.length || busy();
-  $('export-all').disabled = busy() || !records.some(d => d.writable && d.entries?.length && !d.error);
+  $('export').disabled = !ready || !canExport(current) || busy();
+  $('export-all').disabled = busy() || !records.some(canExport);
   for (const id of ['rescan', 'add-bookmark', 'save-json', 'load-json', 'sensitivity']) $(id).disabled = !ready || busy();
   for (const id of ['entry-title', 'entry-level', 'entry-page', 'entry-position', 'move-up', 'move-down', 'delete', 'locate']) $(id).disabled = !entry() || busy();
   $('undo').disabled = !current?.history?.length || busy();
@@ -232,7 +238,7 @@ async function addFiles(files) {
         } });
       if (cancelled) throw new Error('Cancelled');
       if (doc.model.unsupportedBookmarks) doc.writable = false;
-      if ($('auto-ocr').checked && doc.model.imagePages.length && !doc.model.bookmarks.length) await performOcr(doc);
+      if ($('auto-ocr').checked && doc.model.imagePages.length) await performOcr(doc);
       doc.entries = clone(doc.model.entries); doc.status = 'ready'; doc.selected = doc.entries.length ? 0 : -1;
       if (doc.entries[0]?.level !== 1 && doc.entries.length) doc.entries[0].level = 1;
     } catch (error) {
@@ -253,17 +259,16 @@ function download(bytes, filename, type) {
 }
 async function exportDocument(doc) {
   if (!doc.writable || !doc.model || doc.error) throw doc.writeError || uiError('export.unavailable');
-  const rows = validateEntries(doc.entries, doc.model.pages);
-  // Unedited existing outlines remain byte-identical, including their original actions.
-  if (doc.model.bookmarks.length && !doc.dirty) return doc.bytes.slice();
-  return writePdfBookmarks(doc.bytes, rows, 'replace');
+  return exportPdf(doc.bytes,doc.model.pages,doc.entries,{
+    preserveOutline:doc.model.bookmarks.length>0 && !doc.dirty,searchable:$('searchable').checked});
 }
 async function exportCurrent() {
   if (busy() || !current) return;
   exporting = true; setControls(); const doc = current; status(t('export.writing'));
   try {
-    await tick(); const bytes = await exportDocument(doc);
-    download(bytes, safeFilename(doc.name), 'application/pdf'); toast(t('export.done'));
+    await tick(); const {bytes,textPages} = await exportDocument(doc);
+    download(bytes, safeFilename(doc.name,textPages ? '.searchable.pdf' : '.with-bookmarks.pdf'), 'application/pdf');
+    toast(t(textPages ? 'export.searchableDone' : 'export.done',{count:textPages}));
   } catch (error) { toast(friendlyError(error), true); }
   finally { exporting = false; setControls(); refreshStatus(); }
 }
@@ -274,10 +279,10 @@ async function exportAll() {
   try {
     for (const doc of records) {
       try {
-        if (!doc.entries.length) throw uiError('export.skip');
+        if (!canExport(doc)) throw uiError('export.skip');
         status(t('export.packing', { name: doc.name })); await tick();
-        const bytes = await exportDocument(doc), name = uniqueFilename(safeFilename(doc.name), used);
-        files[name] = bytes; report.push({ source: doc.name, output: name, bookmarks: doc.entries.length, status: 'exported' });
+        const {bytes,textPages} = await exportDocument(doc), name = uniqueFilename(safeFilename(doc.name,textPages ? '.searchable.pdf' : '.with-bookmarks.pdf'), used);
+        files[name] = bytes; report.push({ source: doc.name, output: name, bookmarks: doc.entries.length, searchablePagesAdded:textPages, status: 'exported' });
       } catch (error) { report.push({ source: doc.name, status: 'skipped', reason: friendlyError(error) }); }
     }
     if (!Object.keys(files).length) throw uiError('export.none');
@@ -318,6 +323,10 @@ async function performOcr(doc, all = false) {
         const chars=doc.model.pages.reduce((sum,p)=>sum+(p.number===n ? 0 : (p.ocrLayout?.text.length ?? p.text.length)),0)+layout.text.length;
         if(chars>5000000) throw uiError('error.textLimit');
         doc.model.pages[n-1].ocrLayout=layout;
+        doc.model.pages[n-1].ocrPdf=result.pdf;
+        doc.model.pages[n-1].ocrPixelWidth=canvas.width;
+        doc.model.pages[n-1].ocrPixelHeight=canvas.height;
+        doc.ocrChanged=true;
         update('ocr.progress',1);
       } finally {
         controller.signal.removeEventListener('abort',abortRender); canvas.width=canvas.height=1;
@@ -327,17 +336,17 @@ async function performOcr(doc, all = false) {
   } catch(error) { doc.ocrWarning=controller.signal.aborted ? uiError('ocr.cancelled') : error?.i18nKey ? error : uiError('ocr.failed'); }
   finally { engine?.close(); if(ocrAbort===controller) ocrAbort=null; }
   doc.model.detected=detectWithOcr(doc.model.pages,{sensitivity:doc.sensitivity});
-  doc.model.entries=doc.model.detected;
+  if(!doc.model.bookmarks.length) doc.model.entries=doc.model.detected;
 }
 async function runOcr() {
   if(busy() || !current?.model) return;
   const doc=current, all=$('ocr-range').value==='all';
   if(!all && !doc.model.imagePages.some(n=>!doc.model.pages[n-1].ocrLayout)){toast(t('ocr.noPages'));return;}
-  if(doc.entries.length && !confirm(t('confirm.rescan'))) return;
-  snapshot(); scanning=true;cancelled=false;doc.status='loading';setControls();
+  const keepOutline=doc.entries.length>0 && (doc.model.bookmarks.length>0 || doc.dirty);
+  scanning=true;cancelled=false;doc.status='loading';setControls();
   try {
-    await performOcr(doc,all); doc.entries=clone(doc.model.detected);
-    doc.selected=doc.entries.length ? 0 : -1;
+    await performOcr(doc,all);
+    if(!keepOutline) { const wasDirty=doc.dirty;snapshot();doc.dirty=wasDirty;doc.entries=clone(doc.model.detected);doc.selected=doc.entries.length ? 0 : -1; }
   } catch(error) { doc.ocrWarning=error?.i18nKey ? error : uiError('ocr.failed');
   } finally {
     doc.status='ready';scanning=false;
@@ -469,7 +478,8 @@ document.querySelectorAll('.close-dialog').forEach(button => button.onclick = ()
 for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
 document.querySelector('.brand').onclick = event => { event.preventDefault(); if (!records.length) window.scrollTo({ top: 0 }); };
 window.addEventListener('resize', () => requestRender());
-window.addEventListener('beforeunload', event => { if (records.some(doc => doc.dirty)) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { if (records.some(doc => doc.dirty || doc.ocrChanged)) { event.preventDefault(); event.returnValue = ''; } });
+$('searchable').onchange=()=>{setControls();refreshStatus();};
 function refreshLanguage() {
   const scroll = $('outline-list').scrollTop;
   translateDom(document);

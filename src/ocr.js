@@ -55,7 +55,8 @@ export async function createLocalOcr({language='eng+chi_sim',signal,progress=()=
       recognize:async canvas=>{
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
         if(!blob) throw uiError('ocr.failed');
-        return call('recognize',{image:new Uint8Array(await blob.arrayBuffer()),options:{},output:{text:true,blocks:true}});
+        return call('recognize',{image:new Uint8Array(await blob.arrayBuffer()),
+          options:{pdfTextOnly:true,pdfTitle:'PaperMark local OCR'},output:{text:true,blocks:true,pdf:true}});
       }, close
     };
   } catch(error) {close(error);throw error;}

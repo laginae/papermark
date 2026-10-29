@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Added searchable PDF export, enabled by default: invisible Unicode OCR text supports search, selection and copying in PDF readers.
+- Preserved original images, page dimensions/rotation, annotations and existing bookmarks while adding text layers; manual OCR also keeps edited bookmarks.
+- Added automatic OCR for scanned documents that already have outlines, and text-only export when no headings are found.
+- Kept existing text pages and reopened PaperMark text layers from receiving duplicate OCR text. The option can be disabled for bookmark-only export.
+- Normalized Chinese OCR spacing and retained text positions; added cropped/rotated-page, visual-preservation and export regression tests.
+
 ## 0.3.0
 
 - Replaced the language menu with English / 中文 buttons, available during processing and usable with keyboard navigation.

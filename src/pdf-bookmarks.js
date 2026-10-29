@@ -39,7 +39,15 @@ async function writePdfBookmarks(bytes, entries, mode = 'replace', existing = []
   if (rows.length > 1000) throw new Error('Too many bookmarks.');
   for (const row of rows) if (!row.title || row.title.length > 500 || !Number.isInteger(row.page) || row.page < 1 || row.page > doc.getPageCount()
     || !Number.isInteger(row.level) || row.level < 1 || row.level > 6 || !Number.isFinite(row.x) || !Number.isFinite(row.y)) throw new Error('Invalid bookmark title, level or destination.');
-  if (!rows.length) return new Uint8Array(bytes);
+  if (!rows.length) {
+    if(mode!=='replace' || !oldRoot) return new Uint8Array(bytes);
+    doc.catalog.delete(key('Outlines'));
+    if(doc.catalog.get(key('PageMode'))?.toString()==='/UseOutlines')doc.catalog.delete(key('PageMode'));
+    const output=await doc.save({useObjectStreams:false,updateFieldAppearances:false});
+    const check=await PDFDocument.load(output,{updateMetadata:false});
+    if(JSON.stringify(pageFingerprint(check))!==JSON.stringify(before))throw new Error('PDF page verification failed.');
+    return output;
+  }
   let root = mode === 'merge' ? oldRoot : null;
   let rootRef = root ? doc.catalog.get(key('Outlines')) : null;
   if (root && !(rootRef instanceof PDFRef)) throw new Error('Unsupported existing bookmark tree. Use replace on a copy.');
