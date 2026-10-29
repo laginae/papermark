@@ -1,6 +1,14 @@
-# Verification for 0.7.0
+# Verification for 0.7.1
 
 The release was checked with synthetic PDFs. No personal research papers are included in the repository or release archives.
+
+## Startup and button checks in 0.7.1
+
+- All 48 automated tests pass. Five new tests cover startup gating, slow loading, late recovery, startup exceptions, unavailable storage, no-script guidance and preservation of controls disabled for functional reasons.
+- Windows Chrome checks exercise Help, both languages, both PDF picker buttons, nine detected headings, export, the visible MinerU upload notice and the upload consent gate. The standalone HTML also starts and opens Help.
+- A streamed page deliberately delays the main program by 18 seconds. The loading notice remains visible, offers reload after 12 seconds, then disappears and releases the interface when startup completes. An injected startup exception displays recovery guidance; a JavaScript-disabled browser shows bilingual instructions instead of a permanent loading message. The error notice fits a 360-pixel viewport.
+- Browser translation is excluded in the document metadata and root attributes. This prevents automatic rewriting of the application's bilingual labels where the browser respects these hints. This is not proof that translation caused every previously reported missed click.
+- Recognition/export algorithms and MinerU consent logic are unchanged. The paid OCR service was not called for this update. The fuller OCR and helper interaction checks below describe the preceding 0.7.0 verification.
 
 ## Guided interface checks in 0.7.0
 
@@ -13,7 +21,7 @@ The release was checked with synthetic PDFs. No personal research papers are inc
 
 ## Automated checks
 
-`npm test` passes 43 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion, searchable export and the guided recognition flow.
+`npm test` passes 48 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion, searchable export, the guided recognition flow and startup recovery.
 
 Language checks cover the English default, stored preference, unavailable browser storage, translation key/placeholder completeness, document language and accessible labels. Searchable export tests cover PDF text extraction, unchanged rendered pixels, retained outlines and annotations, 0/90/180/270-degree rotations with crop offsets, duplicate-layer prevention, disabled text layers, no-heading export and explicitly cleared bookmarks. Chinese spacing normalization retains English word spaces.
 

@@ -16,6 +16,8 @@ Download **PaperMark.html** from the [latest release](https://github.com/laginae
 
 The interface starts in **English**. Use the **English / 中文** buttons in the top bar to switch, including while a PDF is being processed. The choice is remembered when browser storage is available. Switching languages preserves the loaded files and edits; it never translates paper text or bookmark titles.
 
+On first open, wait for the **Loading PaperMark…** notice to disappear before adding files. A slow or failed start offers **Reload page**. HTML previews that cannot run scripts are not interactive: open the complete downloaded file in a browser or use the online link above. Use the app's language buttons; browser translation can alter labels.
+
 ![PaperMark English interface](docs/interface-en.png)
 
 ## Features
@@ -65,7 +67,7 @@ Adding bookmarks is **not anonymization**: existing PDF metadata, text and annot
 - Detection is heuristic and needs review, especially for unusual layouts. It does not insert a printed table-of-contents page.
 - Encrypted PDFs, signed PDFs, writing restrictions and unsupported original outline targets prevent export.
 - Limits: 100 MB and 2,000 pages per PDF; 20 files and 250 MB total; up to 1,000 new bookmarks. Large files can use substantially more memory than their file size.
-- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.7.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
+- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.7.1 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
 - Page numbers are physical PDF pages, starting at 1, rather than printed page labels.
 
 ## Build from source

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1
+
+- Show a loading notice before the PDF engine starts, keep the interface unavailable until its handlers are ready, and offer reload guidance on slow or failed startup.
+- Explain unsupported HTML previews when JavaScript cannot run, with a link to the online app.
+- Ask browser translators to leave the interface intact; use the built-in English / 中文 switch for consistent labels.
+- Add regression coverage for delayed startup, startup errors, unavailable storage and preserved button states. PDF processing and MinerU upload consent are unchanged.
+
 ## 0.7.0
 
 - Put adding a PDF first and moved recognition settings into the selected document. Local OCR starts from one primary action; automatic OCR of subsequently added files remains available in advanced options.

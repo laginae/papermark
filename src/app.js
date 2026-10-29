@@ -579,3 +579,4 @@ for(const button of document.querySelectorAll('[data-language]')) button.onclick
   saveLanguage(button.dataset.language, languageStorage()); refreshLanguage();
 };
 refreshLanguage();
+window.paperMarkStartup?.ready();

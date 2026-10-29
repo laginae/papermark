@@ -51,6 +51,7 @@ const escapeHtml = text => text.replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
   // The replacement callback avoids interpreting dollar sequences in bundled code.
   return template.replace('/* APP_STYLES */', () => read('src/styles.css')+'\n'+read('src/mineru.css'))
     .replaceAll('{{VERSION}}', pkg.version)
+    .replace('/* STARTUP_SCRIPT */', () => read('src/startup.js'))
     .replace('/* THIRD_PARTY_LICENSES */', () => escapeHtml(licenseTexts.join('\n\n')))
     .replace('/* APP_SCRIPT */', () => result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script'));
   }
