@@ -3,7 +3,8 @@ import workerCode from 'embedded-worker';
 import resources from 'embedded-resources';
 import { zipSync } from 'fflate';
 import { scanPdfOutline } from './pdf-outline';
-import { detectHeadings } from './detection';
+import { detectWithOcr, ocrLayout } from './ocr-layout';
+import { createLocalOcr } from './ocr';
 import { loadWritablePdf, writePdfBookmarks } from './pdf-bookmarks';
 import { validateEntries, safeFilename, uniqueFilename } from './model';
 import { t, getLanguage, restoreLanguage, saveLanguage, translateDom, uiError, reasonLabel } from './i18n';
@@ -13,7 +14,7 @@ function languageStorage() { try { return window.localStorage; } catch { return 
 restoreLanguage(languageStorage());
 const records = []; let current = null, scanning = false, exporting = false, cancelled = false;
 let nextId = 1, selection = -1, currentPage = 1, zoom = 1, renderTask = null, renderGeneration = 0;
-let viewport = null, locating = false, toastTimer, renderTimer;
+let viewport = null, locating = false, toastTimer, renderTimer, ocrAbort = null;
 const workerUrl = URL.createObjectURL(new Blob([workerCode], { type: 'text/javascript' }));
 class EmbeddedBinaryDataFactory {
   async fetch({ kind, filename }) {
@@ -46,14 +47,18 @@ function status(text, kind = '') {
 }
 function refreshStatus() {
   if (!current) return;
-  if (current.status === 'loading') { status(current.progress ? t('progress', current.progress) : t('status.reading')); return; }
+  if (current.status === 'loading') { status(current.progress ? t(current.progress.key || 'progress', current.progress) : t('status.reading')); return; }
   if (current.error) { status(friendlyError(current.error), 'error'); return; }
   if (!current.model) return;
   const messages = [];
   if (current.writeError) messages.push(friendlyError(current.writeError));
+  if (current.ocrWarning) messages.push(friendlyError(current.ocrWarning));
+  const ocrPages=current.model.pages.filter(page=>page.ocrLayout).length;
+  if(ocrPages) messages.push(t('ocr.done',{count:ocrPages}));
   if (current.model.unsupportedBookmarks) messages.push(t('status.unsupported'));
-  if (current.model.imagePages.length) {
-    messages.push(t('status.scanned', { pages: current.model.imagePages.slice(0, 8).join(', '), more: current.model.imagePages.length > 8 ? t('status.more') : '' }));
+  const missing=current.model.imagePages.filter(n=>!current.model.pages[n-1].ocrLayout);
+  if (missing.length) {
+    messages.push(t('status.scanned', { pages: missing.slice(0, 8).join(', '), more: missing.length > 8 ? t('status.more') : '' }));
   }
   if (!current.entries.length) messages.push(t('status.none'));
   else if (current.model.bookmarks.length && !current.dirty) messages.push(t('status.existing', { count: current.entries.length }));
@@ -80,7 +85,8 @@ function renderQueue() {
 function setControls() {
   const ready = current?.model && current?.status === 'ready';
   $('open').disabled = $('add-more').disabled = busy();
-  $('language').disabled = busy();
+  $('auto-ocr').disabled = $('ocr-language').disabled = $('ocr-range').disabled = busy();
+  $('ocr-run').disabled = !ready || busy();
   $('export').disabled = !ready || !current?.writable || !current?.entries.length || busy();
   $('export-all').disabled = busy() || !records.some(d => d.writable && d.entries?.length && !d.error);
   for (const id of ['rescan', 'add-bookmark', 'save-json', 'load-json', 'sensitivity']) $(id).disabled = !ready || busy();
@@ -130,6 +136,7 @@ function renderOutline() {
 }
 function refreshInspector() {
   const row = entry(); $('inspector').hidden = !row;
+  $('preview-tip').textContent = locating ? t('locate.tip') : t('previewTip');
   if (!row) return;
   $('entry-title').value = row.title; $('entry-level').value = row.level; $('entry-page').value = row.page;
   $('entry-page').max = current.pdf.numPages;
@@ -225,6 +232,7 @@ async function addFiles(files) {
         } });
       if (cancelled) throw new Error('Cancelled');
       if (doc.model.unsupportedBookmarks) doc.writable = false;
+      if ($('auto-ocr').checked && doc.model.imagePages.length && !doc.model.bookmarks.length) await performOcr(doc);
       doc.entries = clone(doc.model.entries); doc.status = 'ready'; doc.selected = doc.entries.length ? 0 : -1;
       if (doc.entries[0]?.level !== 1 && doc.entries.length) doc.entries[0].level = 1;
     } catch (error) {
@@ -280,11 +288,67 @@ async function exportAll() {
   } catch (error) { toast(friendlyError(error), true); }
   finally { exporting = false; setControls(); refreshStatus(); }
 }
+async function performOcr(doc, all = false) {
+  const candidates=all ? doc.model.pages.map(p=>p.number) : doc.model.imagePages.filter(n=>!doc.model.pages[n-1].ocrLayout);
+  if (!candidates.length) { toast(t('ocr.noPages')); return; }
+  const controller=new AbortController(); ocrAbort=controller; let engine=null, pageNumber=0;
+  doc.ocrWarning=null;
+  const update=(key,percent=0)=>{
+    doc.progress={key,page:pageNumber,count:candidates.length,percent:Math.round(percent*100)};
+    $('progress').max=candidates.length; $('progress').value=candidates.indexOf(pageNumber)+Math.max(0,percent);
+    if(current===doc) refreshStatus();
+  };
+  try {
+    update('ocr.resources');
+    engine=await createLocalOcr({language:$('ocr-language').value,signal:controller.signal,progress:({stage,fraction})=>{
+      update(pageNumber ? 'ocr.progress' : stage==='resources' ? 'ocr.resources' : 'ocr.preparing',fraction);
+    }});
+    for (const n of candidates) {
+      controller.signal.throwIfAborted(); pageNumber=n; update('ocr.progress');
+      const pdfPage=await doc.pdf.getPage(n), base=pdfPage.getViewport({scale:1});
+      const scale=Math.min(2.5,Math.sqrt(4000000/(base.width*base.height)));
+      const view=pdfPage.getViewport({scale}), canvas=document.createElement('canvas');
+      canvas.width=Math.ceil(view.width); canvas.height=Math.ceil(view.height);
+      const task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:view,annotationMode:pdfjs.AnnotationMode.DISABLE});
+      const abortRender=()=>task.cancel(); controller.signal.addEventListener('abort',abortRender,{once:true});
+      try {
+        await task.promise; controller.signal.throwIfAborted();
+        const result=await engine.recognize(canvas); controller.signal.throwIfAborted();
+        const layout=ocrLayout(result,doc.model.pages[n-1],view);
+        const chars=doc.model.pages.reduce((sum,p)=>sum+(p.number===n ? 0 : (p.ocrLayout?.text.length ?? p.text.length)),0)+layout.text.length;
+        if(chars>5000000) throw uiError('error.textLimit');
+        doc.model.pages[n-1].ocrLayout=layout;
+        update('ocr.progress',1);
+      } finally {
+        controller.signal.removeEventListener('abort',abortRender); canvas.width=canvas.height=1;
+      }
+      await tick();
+    }
+  } catch(error) { doc.ocrWarning=controller.signal.aborted ? uiError('ocr.cancelled') : error?.i18nKey ? error : uiError('ocr.failed'); }
+  finally { engine?.close(); if(ocrAbort===controller) ocrAbort=null; }
+  doc.model.detected=detectWithOcr(doc.model.pages,{sensitivity:doc.sensitivity});
+  doc.model.entries=doc.model.detected;
+}
+async function runOcr() {
+  if(busy() || !current?.model) return;
+  const doc=current, all=$('ocr-range').value==='all';
+  if(!all && !doc.model.imagePages.some(n=>!doc.model.pages[n-1].ocrLayout)){toast(t('ocr.noPages'));return;}
+  if(doc.entries.length && !confirm(t('confirm.rescan'))) return;
+  snapshot(); scanning=true;cancelled=false;doc.status='loading';setControls();
+  try {
+    await performOcr(doc,all); doc.entries=clone(doc.model.detected);
+    doc.selected=doc.entries.length ? 0 : -1;
+  } catch(error) { doc.ocrWarning=error?.i18nKey ? error : uiError('ocr.failed');
+  } finally {
+    doc.status='ready';scanning=false;
+    if(current===doc) selectDocument(doc); else renderQueue(); setControls();
+  }
+}
 function rescan() {
   if (busy() || !current?.model) return;
   if (current.entries.length && !confirm(t('confirm.rescan'))) return;
   snapshot(); current.sensitivity = $('sensitivity').value;
-  current.entries = clone(detectHeadings(current.model.pages, { sensitivity: current.sensitivity }));
+  current.entries = clone(detectWithOcr(current.model.pages, { sensitivity: current.sensitivity }));
   selection = current.entries.length ? 0 : -1; currentPage = entry()?.page || 1; edited(); requestRender(true);
 }
 function addBookmark() {
@@ -353,6 +417,7 @@ document.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth
 document.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; document.body.classList.remove('drag-over'); addFiles(event.dataTransfer.files); });
 $('export').onclick = exportCurrent; $('export-all').onclick = exportAll;
 $('rescan').onclick = rescan; $('add-bookmark').onclick = addBookmark;
+$('ocr-run').onclick = runOcr;
 for (const id of ['entry-title','entry-level','entry-page','entry-position']) $(id).onchange = () => editField(id);
 $('move-up').onclick = () => moveEntry(-1); $('move-down').onclick = () => moveEntry(1);
 $('delete').onclick = () => {
@@ -387,7 +452,7 @@ $('prev').onclick = () => navigate(currentPage - 1); $('next').onclick = () => n
 $('page').onchange = () => navigate(Number($('page').value));
 $('zoom-in').onclick = () => { zoom = Math.min(2.5, Math.round((zoom + .25) * 100) / 100); requestRender(); };
 $('zoom-out').onclick = () => { zoom = Math.max(.5, Math.round((zoom - .25) * 100) / 100); requestRender(); };
-$('cancel').onclick = () => { cancelled = true; $('cancel').disabled = true; };
+$('cancel').onclick = () => { cancelled = true; ocrAbort?.abort(); $('cancel').disabled = true; };
 $('clear').onclick = async () => {
   if (busy() || !confirm(t('confirm.clear'))) return;
   ++renderGeneration; renderTask?.cancel();
@@ -407,7 +472,8 @@ window.addEventListener('resize', () => requestRender());
 window.addEventListener('beforeunload', event => { if (records.some(doc => doc.dirty)) { event.preventDefault(); event.returnValue = ''; } });
 function refreshLanguage() {
   const scroll = $('outline-list').scrollTop;
-  translateDom(document); $('language').value = getLanguage();
+  translateDom(document);
+  for(const button of document.querySelectorAll('[data-language]')) button.setAttribute('aria-pressed',String(button.dataset.language===getLanguage()));
   $('toast').hidden = true;
   $('zoom-label').textContent = zoom === 1 ? t('fit') : Math.round(zoom * 100) + '%';
   if (current) {
@@ -420,9 +486,12 @@ function refreshLanguage() {
   }
   setControls();
 }
-$('language').onchange = () => {
-  const value = $('language').value, pending = document.activeElement?.id;
-  if (['entry-title', 'entry-page', 'entry-position'].includes(pending)) editField(pending);
-  saveLanguage(value, languageStorage()); refreshLanguage();
+for(const button of document.querySelectorAll('[data-language]')) button.onclick = () => {
+  if(!busy() && entry()) for(const field of ['entry-title','entry-page','entry-position']) {
+    // Normal blur commits first. Also keep pending text when assistive controls
+    // activate the language button without moving focus.
+    if(document.activeElement?.id===field) editField(field);
+  }
+  saveLanguage(button.dataset.language, languageStorage()); refreshLanguage();
 };
 refreshLanguage();

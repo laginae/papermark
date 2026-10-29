@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Replaced the language menu with English / 中文 buttons, available during processing and usable with keyboard navigation.
+- Added local OCR for scanned PDFs, with bundled English and Simplified Chinese models, automatic scan detection, cancellation and manual retry.
+- Kept PDF images unchanged; OCR creates reviewable bookmark candidates with page destinations, without adding a text layer.
+- Hosted OCR resources are loaded from the same site and hash-verified; no PDF bytes, filenames or OCR text are uploaded. The standalone HTML embeds all OCR resources for offline use.
+- Added OCR layout tests, synthetic scan fixtures and independent exported-PDF checks.
+
 ## 0.2.0
 
 - English is now the default interface language.

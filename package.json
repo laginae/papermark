@@ -1,6 +1,6 @@
 {
   "name": "paper-pdf-bookmarker",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Local-first paper PDF bookmark editor, packaged as one offline HTML file.",
   "license": "MIT",
@@ -13,9 +13,12 @@
     "audit:public": "node scripts/audit-public.cjs"
   },
   "dependencies": {
+    "@tesseract.js-data/chi_sim": "1.0.0",
+    "@tesseract.js-data/eng": "1.0.0",
     "fflate": "0.8.3",
     "pdf-lib": "1.17.1",
-    "pdfjs-dist": "6.4.299"
+    "pdfjs-dist": "6.4.299",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

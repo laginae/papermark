@@ -1,12 +1,25 @@
 {
   "app": "PaperMark",
-  "version": "0.2.0",
-  "bytes": 6245050,
-  "sha256": "dd23ecd7d2baf06559be7d5c56c1f41617628bf78d1664bfc20d89bcbc960f2e",
+  "version": "0.3.0",
+  "bytes": 16550213,
+  "sha256": "31d8d73442e047abd3f91c48d32f9ba73666bd8db86e161d3eecd07d0bc3346c",
   "offlineResources": 186,
   "dependencies": {
+    "@tesseract.js-data/chi_sim": "1.0.0",
+    "@tesseract.js-data/eng": "1.0.0",
     "fflate": "0.8.3",
     "pdf-lib": "1.17.1",
-    "pdfjs-dist": "6.4.299"
+    "pdfjs-dist": "6.4.299",
+    "tesseract.js": "7.0.0"
+  },
+  "web": {
+    "file": "index.html",
+    "bytes": 6312791,
+    "sha256": "6db1d31195a9968348aa94ad116c8c13ce6f98eeeea9730a599e1cb3bdb79715"
+  },
+  "ocr": {
+    "file": "ocr-resources-eb7384bf600b.json",
+    "bytes": 10240531,
+    "sha256": "eb7384bf600bd9b5653c5639b4dc6ec49c88ccc1a534f70b629b6d10edff28b5"
   }
 }
