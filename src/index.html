@@ -27,10 +27,20 @@
       <label class="check-label"><input id="mineru-enabled" type="checkbox"><span data-i18n="mineru.enable">Enable MinerU high precision · online, optional</span></label>
       <div id="mineru-panel" hidden="">
         <p class="mineru-warning" data-i18n="mineru.warning">Online mode uploads the selected PDF to MinerU. Use your own API Token. Nothing is uploaded until you confirm each file.</p>
-        <details><summary data-i18n="mineru.setup">Connect the local helper</summary>
-          <ol><li><a href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-helper.cjs" target="_blank" rel="noopener noreferrer" data-i18n="mineru.download">Download the connection helper</a><span data-i18n="mineru.start">. With Node.js 22 or later installed, run: </span><code>node PaperMark-MinerU-helper.cjs</code></li>
-          <li data-i18n="mineru.pairHelp">Keep its window open, paste the connection code below, then connect. Allow local network access if your browser asks. This code is not your API Token.</li></ol>
+        <details open="" id="mineru-setup"><summary data-i18n="mineru.setup">Set up MinerU in five steps</summary>
+          <ol class="mineru-steps"><li><a href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip" target="_blank" rel="noopener noreferrer" data-i18n="mineru.download">Download the Windows helper (ZIP)</a><span data-i18n="mineru.start">. Extract it, then double-click PaperMark-MinerU.exe. No Node.js installation or commands are needed. Windows 10/11 x64.</span></li>
+          <li data-i18n="mineru.controlStep">The helper opens a local control page. Keep its program window open and click Copy connection code.</li>
+          <li data-i18n="mineru.pairHelp">Paste that code into Helper connection code below and click Connect. Allow local network access if the browser asks. This code is not your API Token.</li>
+          <li data-i18n="mineru.tokenStep">Add a PDF and enter your own MinerU API Token below. Use Get your own Token if you need one.</li>
+          <li data-i18n="mineru.exportStep">Click Review upload & run MinerU and confirm the whole-document upload. Review the result, then export with Export searchable PDF enabled.</li></ol>
+          <p class="mineru-note" data-i18n="mineru.stopHelp">When finished, click Stop helper on its local control page or close the helper program window. Closing only the browser tab does not stop it. A new launch creates a new connection code.</p>
           <p data-i18n="mineru.helperPrivacy">The helper runs only on your computer and forwards requests to the official MinerU service. There is no shared account or public relay. Local OCR works without it.</p>
+        </details>
+        <details><summary data-i18n="mineru.troubleshooting">Connection help and other platforms</summary>
+          <p data-i18n="mineru.controlHelp">If the control page did not open, keep the helper running and open the local address below. If connection fails, copy the current code again and check your browser's local network permission.</p>
+          <a href="http://127.0.0.1:8768/" target="_blank" rel="noopener noreferrer" data-i18n="mineru.controlLink">Open local helper control page</a>
+          <p data-i18n="mineru.unsigned">The Windows app is unsigned, so the system may show an unknown publisher. Download only from this project's releases and check SHA256SUMS.txt. Do not disable security protection.</p>
+          <p><span data-i18n="mineru.otherPlatforms">macOS / Linux: the script helper requires Node.js 22.13 or later. </span><a href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-helper.cjs" target="_blank" rel="noopener noreferrer" data-i18n="mineru.scriptDownload">Download script helper</a> · <a href="https://github.com/laginae/papermark/blob/main/docs/mineru.md" target="_blank" rel="noopener noreferrer" data-i18n="mineru.fullGuide">Full guide</a></p>
         </details>
         <div class="mineru-fields">
           <label><span data-i18n="mineru.code">Helper connection code</span><input id="mineru-code" type="password" autocomplete="off" spellcheck="false" maxlength="48"></label>

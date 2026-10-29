@@ -43,7 +43,9 @@ Local OCR uses higher-resolution images, contrast adjustment and correction of s
 
 ## Optional MinerU high precision
 
-Disabled by default. Every user enters their own API Token; it is never embedded in the app or saved. A paired local connection helper handles official-service requests for the static website. Confirm each document before upload. Existing or edited outlines and original page images are retained. See [setup, privacy and limitations](docs/mineru.md). Saved results can be imported locally into the same original PDF.
+Disabled by default. Every user enters their own API Token; it is never embedded in the app or saved. On Windows 10/11 x64, download [the helper ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip), extract it and double-click `PaperMark-MinerU.exe` — no Node.js installation or commands. Its local control page provides a copyable connection code and a Stop button. The PaperMark page includes all five setup steps in English and Chinese. The script helper remains available for other desktop systems with Node.js.
+
+Confirm each document before upload. Existing or edited outlines and original page images are retained. See [setup, privacy and limitations](docs/mineru.md), including unsigned Windows program notices. Saved results can be imported locally into the same original PDF.
 
 ## Privacy and file handling
 
@@ -63,7 +65,7 @@ Adding bookmarks is **not anonymization**: existing PDF metadata, text and annot
 - Detection is heuristic and needs review, especially for unusual layouts. It does not insert a printed table-of-contents page.
 - Encrypted PDFs, signed PDFs, writing restrictions and unsupported original outline targets prevent export.
 - Limits: 100 MB and 2,000 pages per PDF; 20 files and 250 MB total; up to 1,000 new bookmarks. Large files can use substantially more memory than their file size.
-- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.5.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
+- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.6.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
 - Page numbers are physical PDF pages, starting at 1, rather than printed page labels.
 
 ## Build from source

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+- Added a self-contained Windows 10/11 x64 helper: extract the ZIP and double-click the program, without installing Node.js or entering commands.
+- Added a local bilingual control page with connection-code copying, an app link and authenticated shutdown. Duplicate launches reopen the running helper.
+- Added visible five-step English/Chinese instructions, connection troubleshooting and clear platform/signature boundaries on the web page.
+- Retained the default-off MinerU mode, per-user Tokens, per-document upload confirmation and existing PDF export behavior. No public relay was added.
+- Added a pinned, checksum-verified Node.js SEA build, native package provenance and runtime license notices.
+
 ## 0.5.0
 
 - Improved local scan preprocessing with higher-resolution recognition, contrast adjustment and bounded deskewing, while retaining the original PDF pages and coordinate mapping.

@@ -1,11 +1,12 @@
 {
   "name": "paper-pdf-bookmarker",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Local-first paper PDF bookmark editor, packaged as one offline HTML file.",
   "license": "MIT",
   "scripts": {
     "build": "node scripts/build.cjs",
+    "package:helper": "node scripts/package-helper.cjs",
     "test": "node --test tests/*.test.cjs",
     "fixtures": "node scripts/fixtures.cjs",
     "serve": "node scripts/serve.cjs",
@@ -22,7 +23,8 @@
   },
   "devDependencies": {
     "esbuild": "0.28.2",
-    "jsdom": "26.1.0"
+    "jsdom": "26.1.0",
+    "postject": "1.0.0-alpha.6"
   },
   "engines": {
     "node": ">=22.13.0"

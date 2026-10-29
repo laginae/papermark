@@ -1,0 +1,48 @@
+PaperMark MinerU helper — Windows 10/11 x64
+No Node.js installation, terminal commands or administrator access required.
+
+1. Extract the whole ZIP into a folder. Double-click PaperMark-MinerU.exe.
+2. Keep the helper program window open. A local control page opens in your default browser.
+   If it does not open, visit http://127.0.0.1:8768/ while the program is running.
+3. Click Copy connection code, then Open PaperMark.
+4. Enable MinerU on PaperMark. Paste the code into Helper connection code and click Connect.
+   Allow the browser's local network permission if asked.
+5. Add a PDF and enter YOUR OWN MinerU API Token. The connection code is not the Token.
+   Obtain your Token at https://mineru.net/apiManage/token .
+6. Click Review upload & run MinerU and confirm that the whole PDF will be uploaded.
+   Review the result, keep Export searchable PDF enabled and export.
+7. When finished, click Stop helper on the local control page or close the program window.
+   Closing only the browser tab does not stop the program. Starting it again makes a new code.
+
+The helper runs on your computer. No public relay or shared API account is used.
+Tokens and PDFs are processed in memory, not saved by the helper. PDF upload requires confirmation.
+Original page images, annotations, existing or edited bookmarks and searchable text are retained.
+This Windows executable is not code-signed. Windows may identify an unknown publisher.
+Download only from the project's release page and check SHA256SUMS.txt. Do not disable security protection.
+The separate .cjs helper remains available for macOS/Linux users with Node.js.
+
+PaperMark MinerU 连接助手 — Windows 10/11 x64
+无需安装 Node.js、输入命令或使用管理员权限。
+
+1. 将整个 ZIP 解压到一个文件夹，双击 PaperMark-MinerU.exe。
+2. 保持助手程序窗口打开，默认浏览器会自动打开本机控制页。
+   如果没有自动打开，可在程序运行时访问 http://127.0.0.1:8768/ 。
+3. 点击“复制连接码”，再点击“打开 PaperMark”。
+4. 在 PaperMark 勾选 MinerU，将连接码粘贴到“助手连接码”，点击“连接”。
+   如浏览器询问，请允许访问本地网络。
+5. 添加 PDF，并填写你自己的 MinerU API Token。连接码不是 Token。
+   Token 获取地址：https://mineru.net/apiManage/token 。
+6. 点击“确认上传并运行 MinerU”，确认整份 PDF 会上传后开始识别。
+   核对结果，保持“导出可搜索 PDF”开启，再导出。
+7. 用完后在本机控制页点击“停止助手”，或关闭助手程序窗口。
+   仅关闭浏览器标签页不会停止程序；重新启动会生成新连接码。
+
+助手仅在本机运行，不增加公共中转，不使用共享账号。
+Token 和 PDF 仅在处理期间的内存中使用，助手不保存它们。上传前须逐份确认。
+保留原页面图像、批注、已有或编辑后的书签，以及搜索复制功能。
+本程序未进行代码签名，Windows 可能显示“未知发布者”。
+请仅从本项目发行页下载，并核对 SHA256SUMS.txt；无需关闭安全防护。
+macOS/Linux 用户仍可使用另行提供的 .cjs 助手，需要 Node.js。
+
+Project / 项目：https://github.com/laginae/papermark
+Online app / 在线版：https://laginae.github.io/papermark/

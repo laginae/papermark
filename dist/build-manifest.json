@@ -1,8 +1,8 @@
 {
   "app": "PaperMark",
-  "version": "0.5.0",
-  "bytes": 16588682,
-  "sha256": "282378125afbcd5267b6f3b9d46edda8c9dce6f6aaeb58fe6c7dd651f2eae0ca",
+  "version": "0.6.0",
+  "bytes": 16752230,
+  "sha256": "581358284d02a048b2a38aed7b200821e1eeafe1addde6118c75eb753d688c46",
   "offlineResources": 186,
   "dependencies": {
     "@tesseract.js-data/chi_sim": "1.0.0",
@@ -14,13 +14,13 @@
   },
   "helper": {
     "file": "PaperMark-MinerU-helper.cjs",
-    "bytes": 551680,
-    "sha256": "6de3c8f447b6882bfe3e43720287a906729461b9edcdee0deb6c78f3e167e007"
+    "bytes": 562899,
+    "sha256": "cc48189c9442d0e6c4fa3af0ea680fad2930f985f257af236b93675858c68c77"
   },
   "web": {
     "file": "index.html",
-    "bytes": 6351260,
-    "sha256": "daf36970d83267656c0e01ac2b0893837f6ef91e75b5a54f308de23cea5e69d9"
+    "bytes": 6514808,
+    "sha256": "44c367b60f3cacbe139fc43596d1b3cfd059128243974a02ffa44cbf7efdb5b2"
   },
   "ocr": {
     "file": "ocr-resources-eb7384bf600b.json",

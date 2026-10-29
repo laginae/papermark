@@ -1,16 +1,18 @@
-# Verification for 0.5.0
+# Verification for 0.6.0
 
 The release was checked with synthetic PDFs. No personal research papers are included in the repository or release archives.
 
 ## Automated checks
 
-`npm run fixtures` followed by `npm test` passes 35 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion and searchable export.
+`npm run fixtures` followed by `npm test` passes 37 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion and searchable export.
 
 Language checks cover the English default, stored preference, unavailable browser storage, translation key/placeholder completeness, document language and accessible labels. Searchable export tests cover PDF text extraction, unchanged rendered pixels, retained outlines and annotations, 0/90/180/270-degree rotations with crop offsets, duplicate-layer prevention, disabled text layers, no-heading export and explicitly cleared bookmarks. Chinese spacing normalization retains English word spaces.
 
 New checks cover small-angle deskewing, rejection of body sentences as OCR headings, paired-helper origin/host/connection-code/consent enforcement, bounded ZIP extraction, outbound destination validation, document fingerprints, page geometry, numeric MinerU heading hierarchy and invisible Chinese/English text layers.
 
 ## OCR comparison
+
+The recognition/export algorithms are unchanged in 0.6.0. The following comparison was made for 0.5.0; 0.6.0 changes the connection helper and usage instructions.
 
 A fixed four-page synthetic comparison uses clean/degraded English two-column and Chinese single-column pages. Degradation reduces resolution to 100 DPI, rotates 1.2 degrees, blurs, reduces contrast and uses JPEG compression. Character errors are Levenshtein distance after whitespace removal and Unicode normalization.
 
@@ -51,6 +53,18 @@ Optional MinerU processing requires a local Node.js connection helper because th
 These checks do not establish accuracy on every paper layout or full compatibility with every browser/operating system. Other desktop operating systems and mobile file-opening behavior were not verified for this release.
 
 The basic image-only fixture can be reproduced after `npm run fixtures` using `python scripts/ocr-chinese-fixture.py` (Pillow, reportlab and a supported Chinese font required), then `node scripts/ocr-fixtures.cjs`. Generated PDFs stay under the ignored `qa/fixtures/` directory. Those basic fixtures use upright, legible print; the separate comparison above includes degraded pages. OCR text can contain errors, and selection/reading order is approximate for complex layouts; the original scan remains the source to check.
+
+## Windows helper and setup checks in 0.6.0
+
+- The packaged Windows x64 executable runs from a directory containing only that EXE, including spaces and Chinese characters, with Node.js removed from the process search path. Its embedded-runtime self-test creates/reopens a PDF and extracts a bounded ZIP result.
+- The embedded runtime is Node.js 24.22.2, obtained from the official distribution. Both the runtime ZIP and original executable match the pinned upstream SHA-256 values. The app uses Node.js SEA with no snapshot/code cache. The invalidated upstream signature is removed; the application is explicitly unsigned, not represented as signed by Node.js.
+- A browser copies the connection code, switches the local control page between English and Chinese, and connects the packaged program to the hosted PaperMark page. The API Token field remains empty. The control page does not collect API Tokens or upload PDFs.
+- Repeated program launch detects the existing helper. Authenticated Stop closes the listening server and exits the native process with code 0; the control page clears its connection code. Tests reject unauthenticated stop requests, foreign origins and shutdown from the hosted app origin.
+- The control page rejects cross-origin reads and framing, has no external assets or browser storage, and does not put the connection code in outgoing URLs. Existing per-file consent and Token forwarding tests continue to pass.
+- The web page defaults to English with MinerU off. Its five-step guide opens when the mode is enabled, provides the Windows ZIP link, and translates without losing inputs. Both pages have no document-level horizontal overflow at 390 pixels.
+- The native ZIP is reopened and every member byte-compared to its inputs. It includes the EXE, bilingual start instructions, license notices and build provenance. It is also checked against the private credential values without printing them. Remote release digests and website files are compared to the audited local outputs.
+
+These are Windows Chrome and Windows x64 checks. macOS/Linux native apps, Windows ARM64, mobile execution of the helper, code-signing trust and organization-specific execution policies are not verified. The existing script helper remains available for other desktop systems with Node.js.
 
 ## Publication checks
 

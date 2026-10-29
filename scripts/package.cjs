@@ -25,6 +25,12 @@ offline.push('dist/PaperMark-MinerU-helper.cjs');
 const assets=[pack('offline',offline,name=>name.replace(/^dist\//,'')),pack('source',source,name=>`PaperMark-${version}/${name}`),'PaperMark.html','PaperMark-MinerU-helper.cjs'];
 fs.copyFileSync(path.join(root,'dist/PaperMark.html'),path.join(out,'PaperMark.html'));
 fs.copyFileSync(path.join(root,'dist/PaperMark-MinerU-helper.cjs'),path.join(out,'PaperMark-MinerU-helper.cjs'));
+const nativeInfo=path.join(out,'PaperMark-MinerU-Windows-x64-build.json');
+if(fs.existsSync(nativeInfo)){
+  const native=JSON.parse(fs.readFileSync(nativeInfo,'utf8')),bytes=fs.readFileSync(path.join(out,native.file));
+  if(native.version!==version||native.helperSha256!==crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'dist/PaperMark-MinerU-helper.cjs'))).digest('hex')||native.sha256!==crypto.createHash('sha256').update(bytes).digest('hex'))throw Error('Rebuild the Windows helper before packaging');
+  assets.push(native.file,'PaperMark-MinerU-Windows-x64-build.json');
+}
 const lines=assets.map(name=>crypto.createHash('sha256').update(fs.readFileSync(path.join(out,name))).digest('hex')+'  '+name);
 fs.writeFileSync(path.join(out,'SHA256SUMS.txt'),lines.join('\n')+'\n');
 console.log(JSON.stringify({version,assets:[...assets,'SHA256SUMS.txt'],archives:'reopened, audited and byte-compared'},null,2));
