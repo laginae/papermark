@@ -7,6 +7,7 @@ import { detectWithOcr, ocrLayout } from './ocr-layout';
 import { createLocalOcr } from './ocr';
 import {prepareOcrCanvas} from './ocr-preprocess';
 import {createMineruClient} from './mineru-client';
+import {createRecognitionFlow} from './recognition-flow';
 import {mineruLayouts} from './mineru-layout';
 import {createUnicodeTextLayer} from './unicode-text-layer';
 import { loadWritablePdf } from './pdf-bookmarks';
@@ -21,7 +22,6 @@ restoreLanguage(languageStorage());
 const records = []; let current = null, scanning = false, exporting = false, cancelled = false;
 let nextId = 1, selection = -1, currentPage = 1, zoom = 1, renderTask = null, renderGeneration = 0;
 let viewport = null, locating = false, toastTimer, renderTimer, ocrAbort = null;
-let mineruClient=null;
 const workerUrl = URL.createObjectURL(new Blob([workerCode], { type: 'text/javascript' }));
 class EmbeddedBinaryDataFactory {
   async fetch({ kind, filename }) {
@@ -36,6 +36,13 @@ const busy = () => scanning || exporting;
 const hasTextExport = doc => $('searchable').checked && !!doc?.model && textLayerPages(doc.model.pages).length>0;
 const canExport = doc => doc?.writable && doc?.model && !doc.error && (doc.entries.length>0 || hasTextExport(doc));
 const entry = () => current?.entries?.[selection];
+const recognition = createRecognitionFlow(document, {
+  connect: async code => { const client = createMineruClient(code); await client.check(); return client; },
+  onRun: runMineru,
+  onLocal: () => runOcr(false),
+  onReview: () => { $('bookmark-editor').scrollIntoView({block:'start', behavior:'smooth'}); $('bookmark-editor').focus({preventScroll:true}); },
+  onMode: () => setControls()
+});
 function toast(message, error = false) {
   clearTimeout(toastTimer); $('toast').textContent = message; $('toast').classList.toggle('error', error);
   $('toast').hidden = false; toastTimer = setTimeout(() => $('toast').hidden = true, error ? 9000 : 5000);
@@ -97,11 +104,7 @@ function setControls() {
   $('open').disabled = $('add-more').disabled = busy();
   $('auto-ocr').disabled = $('ocr-language').disabled = $('ocr-range').disabled = busy();
   $('searchable').disabled = busy();
-  $('mineru-enabled').disabled=busy();
-  for(const id of ['mineru-code','mineru-token','mineru-connect'])$(id).disabled=busy();
-  $('mineru-run').disabled=!ready||!current?.writable||busy()||!mineruClient||!$('mineru-enabled').checked;
-  $('mineru-import').disabled=!ready||!current?.writable||busy()||!$('mineru-enabled').checked;
-  $('mineru-save').disabled=busy()||!current?.mineruResult;
+  recognition.update({doc:current, busy:busy()});
   $('ocr-run').disabled = !ready || busy();
   $('export').disabled = !ready || !canExport(current) || busy();
   $('export-all').disabled = busy() || !records.some(canExport);
@@ -162,10 +165,10 @@ function refreshInspector() {
   $('locate').classList.toggle('active', locating);
   $('preview-tip').textContent = locating ? t('locate.tip') : t('previewTip');
 }
-function snapshot() {
-  current.history.push({ entries: clone(current.entries), selection, dirty: current.dirty });
-  if (current.history.length > 40) current.history.shift();
-  current.dirty = true;
+function snapshot(doc = current) {
+  doc.history.push({ entries: clone(doc.entries), selection:doc === current ? selection : doc.selected, dirty: doc.dirty });
+  if (doc.history.length > 40) doc.history.shift();
+  doc.dirty = true;
 }
 function edited() { renderOutline(); renderQueue(); refreshStatus(); markDestination(); }
 function requestRender(scrollToMark = false) {
@@ -248,7 +251,7 @@ async function addFiles(files) {
         } });
       if (cancelled) throw new Error('Cancelled');
       if (doc.model.unsupportedBookmarks) doc.writable = false;
-      if ($('auto-ocr').checked && doc.model.imagePages.length) await performOcr(doc);
+      if (!recognition.isOnline() && $('auto-ocr').checked && doc.model.imagePages.length) await performOcr(doc);
       doc.entries = clone(doc.model.entries); doc.status = 'ready'; doc.selected = doc.entries.length ? 0 : -1;
       if (doc.entries[0]?.level !== 1 && doc.entries.length) doc.entries[0].level = 1;
     } catch (error) {
@@ -361,15 +364,15 @@ async function performOcr(doc, all = false) {
   doc.model.detected=detectWithOcr(doc.model.pages,{sensitivity:doc.sensitivity});
   if(!doc.model.bookmarks.length) doc.model.entries=doc.model.detected;
 }
-async function runOcr() {
+async function runOcr(all = $('ocr-range').value === 'all') {
   if(busy() || !current?.model) return;
-  const doc=current, all=$('ocr-range').value==='all';
+  const doc=current;
   if(!all && !doc.model.imagePages.some(n=>!doc.model.pages[n-1].ocrLayout)){toast(t('ocr.noPages'));return;}
   const keepOutline=doc.entries.length>0 && (doc.model.bookmarks.length>0 || doc.dirty);
   scanning=true;cancelled=false;doc.status='loading';setControls();
   try {
     await performOcr(doc,all);
-    if(!keepOutline) { const wasDirty=doc.dirty;snapshot();doc.dirty=wasDirty;doc.entries=clone(doc.model.detected);doc.selected=doc.entries.length ? 0 : -1; }
+    if(!keepOutline) { const wasDirty=doc.dirty;snapshot(doc);doc.dirty=wasDirty;doc.entries=clone(doc.model.detected);doc.selected=doc.entries.length ? 0 : -1; }
   } catch(error) { doc.ocrWarning=error?.i18nKey ? error : uiError('ocr.failed');
   } finally {
     doc.status='ready';scanning=false;
@@ -395,15 +398,11 @@ async function applyMineruResult(doc,envelope) {
   doc.mineruResult=envelope;doc.ocrChanged=true;doc.ocrWarning=null;
 }
 async function runMineru() {
-  if(busy()||!current?.writable||!current?.model||!mineruClient||!$('mineru-enabled').checked)return;
-  const doc=current;if(doc.pdf.numPages>200){toast(t('mineru.limit'),true);return;}
-  let token=$('mineru-token').value.trim();
-  if(!/^[A-Za-z0-9_.+=/-]{20,2048}$/.test(token)){toast(t('mineru.tokenError'),true);return;}
-  if(!confirm(t('mineru.confirm',{name:doc.name,pages:doc.pdf.numPages})))return;
+  const upload=recognition.takeUpload(); if(!upload)return;
+  const {doc,client}=upload; let token=upload.token; upload.token='';
   const controller=new AbortController();ocrAbort=controller;scanning=true;cancelled=false;doc.status='loading';doc.progress={key:'mineru.uploading'};setControls();refreshStatus();
-  $('mineru-token').value='';
   try{
-    const envelope=await mineruClient.recognize(doc.bytes,token,controller.signal,phase=>{
+    const envelope=await client.recognize(doc.bytes,token,controller.signal,phase=>{
       doc.progress={key:phase==='uploading'?'mineru.uploading':'mineru.processing'};if(current===doc)refreshStatus();
     });token='';
     // Local line positions improve selection alignment for a document that
@@ -412,16 +411,16 @@ async function runMineru() {
       await performOcr(doc);ocrAbort=controller;if(cancelled)controller.abort();controller.signal.throwIfAborted();
     }
     doc.progress={key:'mineru.applying'};if(current===doc)refreshStatus();
-    await applyMineruResult(doc,envelope);toast(t('mineru.done'));
-  }catch(error){doc.ocrWarning=controller.signal.aborted?uiError('mineru.cancelled'):error?.i18nKey?error:uiError('mineru.failed');}
+    await applyMineruResult(doc,envelope);if(current===doc)recognition.finish(true);toast(t('mineru.done'));
+  }catch(error){doc.ocrWarning=controller.signal.aborted?uiError('mineru.cancelled'):error?.i18nKey?error:uiError('mineru.failed');if(current===doc)recognition.finish(false,doc.ocrWarning);}
   finally{token='';ocrAbort=null;scanning=false;doc.status='ready';if(current===doc)selectDocument(doc);else renderQueue();setControls();}
 }
 async function importMineru(file) {
-  if(!file||busy()||!current?.model||!current.writable||!$('mineru-enabled').checked)return;
+  if(!file||busy()||!current?.model||!current.writable||!recognition.isOnline())return;
   const doc=current;
   if(file.size>40*1024**2){toast(t('mineru.invalid'),true);return;}
   scanning=true;cancelled=false;ocrAbort=new AbortController();doc.status='loading';doc.progress={key:'mineru.applying'};setControls();refreshStatus();
-  try{const envelope=JSON.parse(await file.text());await applyMineruResult(doc,envelope);toast(t('mineru.done'));}
+  try{const envelope=JSON.parse(await file.text());await applyMineruResult(doc,envelope);if(current===doc)recognition.finish(true);toast(t('mineru.done'));}
   catch(error){toast(friendlyError(error?.i18nKey?error:uiError('mineru.invalid')),true);}
   finally{ocrAbort=null;scanning=false;doc.status='ready';if(current===doc)selectDocument(doc);else renderQueue();}
 }
@@ -498,26 +497,10 @@ document.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth
 document.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; document.body.classList.remove('drag-over'); addFiles(event.dataTransfer.files); });
 $('export').onclick = exportCurrent; $('export-all').onclick = exportAll;
 $('rescan').onclick = rescan; $('add-bookmark').onclick = addBookmark;
-$('ocr-run').onclick = runOcr;
-$('mineru-run').onclick=runMineru;
-$('mineru-enabled').onchange=()=>{
-  $('mineru-panel').hidden=!$('mineru-enabled').checked;
-  if(!$('mineru-enabled').checked){mineruClient=null;$('mineru-code').value='';$('mineru-token').value='';}
-  refreshMineru();setControls();
-};
-$('mineru-code').oninput=()=>{mineruClient=null;refreshMineru();setControls();};
-$('mineru-connect').onclick=async()=>{
-  try{const client=createMineruClient($('mineru-code').value);await client.check();mineruClient=client;toast(t('mineru.connected'));}
-  catch(error){mineruClient=null;toast(friendlyError(error),true);}refreshMineru();setControls();
-};
+$('ocr-run').onclick = () => runOcr();
 $('mineru-import').onclick=()=>$('mineru-file').click();
 $('mineru-file').onchange=event=>{importMineru(event.target.files[0]);event.target.value='';};
 $('mineru-save').onclick=()=>{if(current?.mineruResult)download(new TextEncoder().encode(JSON.stringify(current.mineruResult)),safeFilename(current.name,'.mineru.json'),'application/json');};
-function refreshMineru(){
-  $('mineru-connection-status').textContent=t(mineruClient?'mineru.connected':'mineru.disconnected');
-  const enabled=$('mineru-enabled').checked;
-  document.querySelector('.privacy [data-i18n]').textContent=t(enabled?'mineru.privacyBadge':'privacy');
-}
 for (const id of ['entry-title','entry-level','entry-page','entry-position']) $(id).onchange = () => editField(id);
 $('move-up').onclick = () => moveEntry(-1); $('move-down').onclick = () => moveEntry(1);
 $('delete').onclick = () => {
@@ -586,7 +569,6 @@ function refreshLanguage() {
     $('preview-tip').textContent = t('previewTip');
   }
   setControls();
-  refreshMineru();
 }
 for(const button of document.querySelectorAll('[data-language]')) button.onclick = () => {
   if(!busy() && entry()) for(const field of ['entry-title','entry-page','entry-position']) {

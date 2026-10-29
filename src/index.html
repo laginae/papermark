@@ -15,44 +15,6 @@
   <input id="files" type="file" accept=".pdf,application/pdf" multiple="" hidden="">
   <input id="mineru-file" type="file" accept=".json,application/json" hidden="">
   <main>
-    <section class="processing-settings" aria-label="OCR settings" data-i18n-aria-label="ocr.settings">
-      <label class="check-label"><input id="auto-ocr" type="checkbox" checked=""><span data-i18n="ocr.auto">Auto OCR scanned pages</span></label>
-      <label><span data-i18n="ocr.language">OCR language</span><select id="ocr-language"><option value="eng+chi_sim" data-i18n="ocr.both">English + Chinese</option><option value="eng" data-i18n="ocr.english">English</option><option value="chi_sim" data-i18n="ocr.chinese">Simplified Chinese</option></select></label>
-      <label><span data-i18n="ocr.range">Manual OCR</span><select id="ocr-range"><option value="scans" data-i18n="ocr.scans">Unprocessed scans</option><option value="all" data-i18n="ocr.all">All pages</option></select></label>
-      <button id="ocr-run" class="outline-button small" data-i18n="ocr.run" disabled="">Run local OCR</button>
-      <label class="check-label"><input id="searchable" type="checkbox" checked=""><span data-i18n="ocr.searchable">Export searchable PDF</span></label>
-      <span class="ocr-privacy" data-i18n="ocr.privacy">Only recognition resources are downloaded. Your PDF stays here.</span>
-    </section>
-    <section class="mineru-settings" aria-label="MinerU" >
-      <label class="check-label"><input id="mineru-enabled" type="checkbox"><span data-i18n="mineru.enable">Enable MinerU high precision · online, optional</span></label>
-      <div id="mineru-panel" hidden="">
-        <p class="mineru-warning" data-i18n="mineru.warning">Online mode uploads the selected PDF to MinerU. Use your own API Token. Nothing is uploaded until you confirm each file.</p>
-        <details open="" id="mineru-setup"><summary data-i18n="mineru.setup">Set up MinerU in five steps</summary>
-          <ol class="mineru-steps"><li><a href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip" target="_blank" rel="noopener noreferrer" data-i18n="mineru.download">Download the Windows helper (ZIP)</a><span data-i18n="mineru.start">. Extract it, then double-click PaperMark-MinerU.exe. No Node.js installation or commands are needed. Windows 10/11 x64.</span></li>
-          <li data-i18n="mineru.controlStep">The helper opens a local control page. Keep its program window open and click Copy connection code.</li>
-          <li data-i18n="mineru.pairHelp">Paste that code into Helper connection code below and click Connect. Allow local network access if the browser asks. This code is not your API Token.</li>
-          <li data-i18n="mineru.tokenStep">Add a PDF and enter your own MinerU API Token below. Use Get your own Token if you need one.</li>
-          <li data-i18n="mineru.exportStep">Click Review upload & run MinerU and confirm the whole-document upload. Review the result, then export with Export searchable PDF enabled.</li></ol>
-          <p class="mineru-note" data-i18n="mineru.stopHelp">When finished, click Stop helper on its local control page or close the helper program window. Closing only the browser tab does not stop it. A new launch creates a new connection code.</p>
-          <p data-i18n="mineru.helperPrivacy">The helper runs only on your computer and forwards requests to the official MinerU service. There is no shared account or public relay. Local OCR works without it.</p>
-        </details>
-        <details><summary data-i18n="mineru.troubleshooting">Connection help and other platforms</summary>
-          <p data-i18n="mineru.controlHelp">If the control page did not open, keep the helper running and open the local address below. If connection fails, copy the current code again and check your browser's local network permission.</p>
-          <a href="http://127.0.0.1:8768/" target="_blank" rel="noopener noreferrer" data-i18n="mineru.controlLink">Open local helper control page</a>
-          <p data-i18n="mineru.unsigned">The Windows app is unsigned, so the system may show an unknown publisher. Download only from this project's releases and check SHA256SUMS.txt. Do not disable security protection.</p>
-          <p><span data-i18n="mineru.otherPlatforms">macOS / Linux: the script helper requires Node.js 22.13 or later. </span><a href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-helper.cjs" target="_blank" rel="noopener noreferrer" data-i18n="mineru.scriptDownload">Download script helper</a> · <a href="https://github.com/laginae/papermark/blob/main/docs/mineru.md" target="_blank" rel="noopener noreferrer" data-i18n="mineru.fullGuide">Full guide</a></p>
-        </details>
-        <div class="mineru-fields">
-          <label><span data-i18n="mineru.code">Helper connection code</span><input id="mineru-code" type="password" autocomplete="off" spellcheck="false" maxlength="48"></label>
-          <button id="mineru-connect" class="outline-button small" data-i18n="mineru.connect">Connect</button><span id="mineru-connection-status" role="status"></span>
-          <label><span data-i18n="mineru.token">Your MinerU API Token</span><input id="mineru-token" type="password" autocomplete="off" spellcheck="false" maxlength="2048"></label>
-          <a href="https://mineru.net/apiManage/token" target="_blank" rel="noopener noreferrer" data-i18n="mineru.getToken">Get your own Token</a>
-        </div>
-        <p class="mineru-note" data-i18n="mineru.tokenPrivacy">The Token stays in memory for this task, is cleared from the field on submission, and is never saved. Use your own quota. Keep important text checked against the scan.</p>
-        <div class="mineru-actions"><button id="mineru-run" class="primary small" data-i18n="mineru.run" disabled="">Review upload & run MinerU</button><button id="mineru-import" class="outline-button small" data-i18n="mineru.import" disabled="">Import saved MinerU result</button><button id="mineru-save" class="quiet small" data-i18n="mineru.save" disabled="">Save MinerU result</button></div>
-        <p class="mineru-note" data-i18n="mineru.resultHelp">Saved results contain document text and are matched to the original PDF. Importing is local. Original pages and existing or edited bookmarks are retained; search and copy use an invisible text layer. Selection positions can be approximate.</p>
-      </div>
-    </section>
     <section id="welcome" class="welcome">
       <div class="hero-copy"><span class="eyebrow" data-i18n="hero.eyebrow">A SMALL TOOL FOR DEEP READING</span><h1><span data-i18n="hero.first" class="hero-first">Give papers</span><br><span data-i18n="hero.last">an outline.</span></h1><p><span data-i18n="hero.intro">Turn section headings into clickable PDF bookmarks.</span><br><span data-i18n="hero.detail">Find your way back to the ideas that matter.</span></p>
         <div class="hero-tags"><span data-i18n="tag.local">Local processing</span><span data-i18n="tag.bilingual">English &amp; Chinese headings</span><span data-i18n="tag.original">Keep originals</span></div>
@@ -69,9 +31,71 @@
         <div class="library-bottom"><div class="local-card"><span class="local-symbol">◉</span><strong data-i18n="local.title">Your papers stay with you.</strong><p data-i18n="local.detail">Files are processed in browser memory. Exports are new copies.</p></div><button id="export-all" class="outline-button" data-i18n="exportAll">Export available files as ZIP</button><button id="clear" class="quiet danger" data-i18n="clear">Clear list</button></div>
       </aside>
       <section class="editor"><header class="document-header"><div><span class="eyebrow" data-i18n="editor.eyebrow">BOOKMARK EDITOR</span><h2 id="doc-name">Reading…</h2><p id="doc-info"></p></div><button id="export" class="primary" disabled="" data-i18n="export">Export PDF ↗</button></header>
+
+        <section id="recognition" class="recognition" aria-label="Recognition" data-i18n-aria-label="flow.title">
+          <div class="mode-switch" role="group" aria-label="Recognition mode" data-i18n-aria-label="flow.mode">
+            <button id="mode-local" type="button" aria-pressed="true" data-i18n="flow.local">Local recognition · default</button>
+            <button id="mode-mineru" type="button" aria-pressed="false" data-i18n="flow.online">MinerU online recognition</button>
+          </div>
+          <p id="flow-unavailable" class="flow-note" role="status" hidden></p>
+          <div id="local-panel">
+            <div class="local-next"><div><h3 id="local-heading"></h3><p id="local-description" class="flow-note"></p></div><button id="local-start" class="primary" aria-describedby="local-description"></button></div>
+          </div>
+          <div id="mineru-panel" hidden>
+            <p class="mineru-warning" data-i18n="flow.uploadNotice">This mode sends the entire selected PDF to MinerU via your local helper. Upload starts only after your confirmation.</p>
+            <ol id="mineru-steps" class="flow-steps" aria-label="MinerU steps" data-i18n-aria-label="flow.steps"><li id="step-marker-1" data-i18n="flow.step1">1 Connect helper</li><li id="step-marker-2" data-i18n="flow.step2">2 Enter Token</li><li id="step-marker-3" data-i18n="flow.step3">3 Confirm upload</li></ol>
+            <div id="mineru-working" class="flow-note" role="status" hidden data-i18n="flow.working">Processing this PDF. Progress and Cancel are below.</div>
+            <div id="mineru-complete" hidden><h3 data-i18n="flow.resultReady">Recognition result is ready</h3><p class="flow-note" data-i18n="flow.reviewHelp">Review the bookmarks below, then export a new PDF. Original pages and existing or edited bookmarks are retained.</p><div class="flow-actions"><button id="mineru-review" class="primary" data-i18n="flow.review">Review bookmarks</button><button id="mineru-retry" class="quiet" data-i18n="flow.rerun">Recognize again</button></div></div>
+            <section id="mineru-step-1" aria-labelledby="connect-heading">
+              <h3 id="connect-heading" tabindex="-1" data-i18n="flow.connectTitle">Connect the helper on this computer</h3>
+              <p class="flow-note" data-i18n="flow.startHelper">First use: download, extract, then double-click PaperMark-MinerU.exe. Keep its window open.</p>
+              <a class="helper-download" href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip" target="_blank" rel="noopener noreferrer" data-i18n="flow.download">Download Windows helper · ZIP</a>
+              <p class="flow-note" data-i18n="flow.copyCode">On the helper's control page, click “Copy connection code”, then paste it here.</p>
+              <label class="flow-field"><span data-i18n="mineru.code">Helper connection code</span><input id="mineru-code" type="password" autocomplete="off" spellcheck="false" maxlength="48" aria-describedby="connection-note"></label>
+              <div class="flow-actions"><button id="mineru-connect" class="primary" data-i18n="flow.connect">Connect helper</button><span id="mineru-connection-status" role="status"></span></div>
+              <p id="connection-note" class="flow-note" data-i18n="flow.connectionOnly">This step only connects the helper; it does not upload your PDF. Allow local network access if asked.</p>
+            </section>
+            <section id="mineru-step-2" hidden aria-labelledby="token-heading">
+              <h3 id="token-heading" tabindex="-1" data-i18n="flow.tokenTitle">Enter your own MinerU Token</h3>
+              <p class="flow-note" data-i18n="flow.tokenSource">Get an API Token from your MinerU account. This is different from the helper connection code.</p>
+              <label class="flow-field"><span data-i18n="mineru.token">Your MinerU API Token</span><input id="mineru-token" type="password" autocomplete="off" spellcheck="false" maxlength="2048" aria-describedby="token-note"></label>
+              <a href="https://mineru.net/apiManage/token" target="_blank" rel="noopener noreferrer" data-i18n="mineru.getToken">Get your own Token</a>
+              <p id="token-note" class="flow-note" data-i18n="flow.tokenPrivacy">Used only for this task in memory, cleared on submission and never saved. Your own quota is used.</p>
+              <div class="flow-actions"><button id="mineru-next" class="primary" data-i18n="flow.next">Next</button><button id="mineru-back-connect" class="quiet" data-i18n="flow.back">Back</button></div>
+            </section>
+            <section id="mineru-step-3" hidden aria-labelledby="upload-heading">
+              <h3 id="upload-heading" tabindex="-1" data-i18n="flow.uploadTitle">Confirm this document's upload</h3>
+              <p id="mineru-upload-file" class="upload-file"></p>
+              <p class="flow-note" data-i18n="flow.uploadDetail">The whole PDF leaves your device and is processed by the official MinerU service, using your Token and quota. Canceling locally may not stop an uploaded task.</p>
+              <label class="consent-label"><input id="mineru-consent" type="checkbox"><span id="mineru-consent-label"></span></label>
+              <p class="flow-note" data-i18n="flow.keepOriginal">Original pages and existing or edited bookmarks are retained. Keep searchable export on to search and copy recognized text.</p>
+              <div class="flow-actions"><button id="mineru-run" class="primary" disabled data-i18n="flow.uploadRun" aria-describedby="mineru-run-hint">Upload & start recognition</button><button id="mineru-back-token" class="quiet" data-i18n="flow.back">Back</button></div>
+              <p id="mineru-run-hint" class="flow-note" role="status"></p>
+            </section>
+            <p id="mineru-flow-error" class="flow-error" role="alert" hidden></p>
+            <details class="flow-help"><summary data-i18n="flow.help">Need help?</summary>
+              <p data-i18n="mineru.controlStep"></p><p data-i18n="mineru.stopHelp"></p><p data-i18n="mineru.helperPrivacy"></p>
+                      <details><summary data-i18n="mineru.troubleshooting">Connection help and other platforms</summary>
+          <p data-i18n="mineru.controlHelp">If the control page did not open, keep the helper running and open the local address below. If connection fails, copy the current code again and check your browser's local network permission.</p>
+          <a href="http://127.0.0.1:8768/" target="_blank" rel="noopener noreferrer" data-i18n="mineru.controlLink">Open local helper control page</a>
+          <p data-i18n="mineru.unsigned">The Windows app is unsigned, so the system may show an unknown publisher. Download only from this project's releases and check SHA256SUMS.txt. Do not disable security protection.</p>
+          <p><span data-i18n="mineru.otherPlatforms">macOS / Linux: the script helper requires Node.js 22.13 or later. </span><a href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-helper.cjs" target="_blank" rel="noopener noreferrer" data-i18n="mineru.scriptDownload">Download script helper</a> · <a href="https://github.com/laginae/papermark/blob/main/docs/mineru.md" target="_blank" rel="noopener noreferrer" data-i18n="mineru.fullGuide">Full guide</a></p>
+        </details>
+
+            </details>
+            <details class="flow-help"><summary data-i18n="flow.savedResults">Import or save recognition results</summary><p class="flow-note" data-i18n="mineru.resultHelp"></p><div class="flow-actions"><button id="mineru-import" class="outline-button" disabled data-i18n="mineru.import"></button><button id="mineru-save" class="quiet" disabled data-i18n="mineru.save"></button></div><p id="mineru-saved-hint" class="flow-note"></p></details>
+          </div>
+          <div class="export-settings"><label class="check-label"><input id="searchable" type="checkbox" checked><span data-i18n="ocr.searchable">Export searchable PDF</span></label><span class="flow-note" data-i18n="flow.searchableHelp">Search and copy recognized text in your downloaded PDF.</span></div>
+          <details id="local-options" class="flow-help"><summary data-i18n="flow.localOptions">Local OCR options</summary><div class="processing-settings">
+            <label><span data-i18n="ocr.language">OCR language</span><select id="ocr-language"><option value="eng+chi_sim" data-i18n="ocr.both"></option><option value="eng" data-i18n="ocr.english"></option><option value="chi_sim" data-i18n="ocr.chinese"></option></select></label>
+            <label><span data-i18n="ocr.range">Manual OCR</span><select id="ocr-range"><option value="scans" data-i18n="ocr.scans"></option><option value="all" data-i18n="ocr.all"></option></select></label><button id="ocr-run" class="outline-button" data-i18n="ocr.run" disabled></button>
+            <label class="check-label"><input id="auto-ocr" type="checkbox"><span data-i18n="flow.autoLater">Auto OCR PDFs added next</span></label>
+            <p class="flow-note" data-i18n="ocr.privacy"></p>
+          </div></details>
+        </section>
         <div id="status" class="status" role="status" aria-live="polite"></div><progress id="progress" hidden=""></progress>
         <div class="editor-columns">
-          <section class="outline-pane"><div class="pane-toolbar"><h3><span data-i18n="outline">Bookmarks</span><span id="bookmark-count">0</span></h3><button id="rescan" class="quiet small" data-i18n="rescan">Detect again</button></div>
+          <section class="outline-pane" id="bookmark-editor" tabindex="-1"><div class="pane-toolbar"><h3><span data-i18n="outline">Bookmarks</span><span id="bookmark-count">0</span></h3><button id="rescan" class="quiet small" data-i18n="rescan">Detect again</button></div>
             <div class="outline-options"><label><span data-i18n="sensitivity">Detection</span><select id="sensitivity"><option value="balanced" data-i18n="balanced">Balanced</option><option value="strict" data-i18n="strict">Conservative</option></select></label><span id="review-count"></span></div>
             <div id="outline-list" class="outline-list" aria-label="Bookmarks" data-i18n-aria-label="outline"></div>
             <button id="add-bookmark" class="add-bookmark" data-i18n="addBookmark">＋ Add a bookmark on this page</button>

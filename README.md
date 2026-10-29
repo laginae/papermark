@@ -31,7 +31,7 @@ The interface starts in **English**. Use the **English / 中文** buttons in the
 
 ## Scanned PDFs
 
-**Auto OCR scanned pages** is enabled by default. Before adding a PDF, choose English, Simplified Chinese or both under **OCR language**. Pages with little extractable text are rendered and recognized locally, including in documents that already have bookmarks. Existing bookmarks are retained.
+Add the PDF first, then click **Recognize & create bookmarks** in the default **Local recognition** mode. Under **Local OCR options**, choose English, Simplified Chinese or both before recognition. **Auto OCR PDFs added next** is optional and off initially, so you can choose the mode before a scan starts. Text headings and existing outlines still load automatically. Existing bookmarks are retained.
 
 Review the generated headings and destinations before exporting. OCR bookmarks are marked for review. **Cancel** stops recognition and keeps completed pages. **Run local OCR → Unprocessed scans** resumes remaining pages; choose **All pages** to repeat recognition with another language. OCR keeps original and manually edited bookmarks. Use **Detect again** to deliberately rebuild the outline; that action asks for confirmation and can be undone.
 
@@ -43,9 +43,9 @@ Local OCR uses higher-resolution images, contrast adjustment and correction of s
 
 ## Optional MinerU high precision
 
-Disabled by default. Every user enters their own API Token; it is never embedded in the app or saved. On Windows 10/11 x64, download [the helper ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip), extract it and double-click `PaperMark-MinerU.exe` — no Node.js installation or commands. Its local control page provides a copyable connection code and a Stop button. The PaperMark page includes all five setup steps in English and Chinese. The script helper remains available for other desktop systems with Node.js.
+After adding a PDF, select **MinerU online recognition** to follow three steps: **Connect helper → Enter Token → Confirm upload**. Every user enters their own API Token; it is never embedded in the app or saved. On Windows 10/11 x64, download [the helper ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip), extract it and double-click `PaperMark-MinerU.exe` — no Node.js installation or commands. Its control page provides a connection code and a Stop button. The guide is available in English and Chinese. The script helper remains available for other desktop systems with Node.js.
 
-Confirm each document before upload. Existing or edited outlines and original page images are retained. See [setup, privacy and limitations](docs/mineru.md), including unsigned Windows program notices. Saved results can be imported locally into the same original PDF.
+The confirmation displays the selected filename and page count. Check the consent box, then click **Upload & start recognition** to send the whole PDF to MinerU. Changing files clears the Token and consent; every retry requires fresh consent. Existing or edited outlines and original page images are retained. See [setup, privacy and limitations](docs/mineru.md), including unsigned Windows program notices. Expand **Import or save recognition results** to import a saved result locally into the same original PDF, without connecting a helper or entering a Token.
 
 ## Privacy and file handling
 
@@ -65,7 +65,7 @@ Adding bookmarks is **not anonymization**: existing PDF metadata, text and annot
 - Detection is heuristic and needs review, especially for unusual layouts. It does not insert a printed table-of-contents page.
 - Encrypted PDFs, signed PDFs, writing restrictions and unsupported original outline targets prevent export.
 - Limits: 100 MB and 2,000 pages per PDF; 20 files and 250 MB total; up to 1,000 new bookmarks. Large files can use substantially more memory than their file size.
-- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.6.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
+- Designed for current desktop Chrome, Edge, Firefox and Safari. Release 0.7.0 was checked in Chrome on Windows; macOS, Linux and other browsers have not been verified for this release. Mobile local-HTML support varies; a static web host may be needed.
 - Page numbers are physical PDF pages, starting at 1, rather than printed page labels.
 
 ## Build from source

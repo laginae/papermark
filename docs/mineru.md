@@ -4,10 +4,12 @@ MinerU mode is **off by default**. Local OCR and offline export remain available
 
 ## Use the online mode
 
+Add your PDF first, then choose **MinerU online recognition**. The page shows only the current setup step.
+
 1. **Windows 10/11 x64:** download [PaperMark-MinerU-Windows-x64.zip](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip), extract it, and double-click **PaperMark-MinerU.exe**. No Node.js installation, commands or administrator access are needed. Keep its program window open. It automatically opens a local control page at `http://127.0.0.1:8768/`.
-2. Click **Copy connection code** on the control page, then **Open PaperMark**. Enable **MinerU high precision**, paste the code into **Helper connection code**, and click **Connect**. If the browser asks, allow local network access. This connection code is not the MinerU Token.
+2. Click **Copy connection code** on the control page, then **Open PaperMark**. Choose **MinerU online recognition**, paste the code into **Helper connection code**, and click **Connect helper**. If the browser asks, allow local network access. This connection code is not the MinerU Token.
 3. Obtain your own API Token at <https://mineru.net/apiManage/token> and enter it in the password field. OpenXLab Access Key / Secret Key pairs are not the same credential.
-4. Click **Review upload & run MinerU**. The confirmation identifies the entire file and page count. Only accepting it starts an upload to MinerU. Limits: 100 MB and 200 pages per PDF.
+4. Click **Next** after entering your Token. Review the filename and page count, check the whole-document upload consent box, then click **Upload & start recognition**. Only this final action starts an upload to MinerU. Changing files clears the Token and consent; each retry needs new consent. Limits: 100 MB and 200 pages per PDF.
 5. Review the resulting outline and export with **Export searchable PDF** enabled. Original page images, geometry, annotations, and existing or manually edited bookmarks stay intact. Use **Detect again** if you deliberately want to replace an existing outline with detected headings. When finished, click **Stop helper** on the local control page or close the helper program window. Closing just its browser tab does not stop it.
 
 The control page has English / 中文 buttons and opens in English by default. It does not request an API Token, access your PDFs or contact external sites automatically. Its copy button copies only the short-lived connection code; API Tokens belong in the PaperMark page. Restarting the helper changes the code, so reconnect with the new one. Opening the program twice reopens the existing helper's control page if it is already running.
@@ -22,6 +24,8 @@ GitHub Pages is static hosting. The local helper supplies the connection the ser
 
 After an upload, MinerU handles the document under its own terms and privacy policy. Stopping locally cannot guarantee deletion or cancellation of a task already accepted by MinerU. The helper discards in-memory job data on client cleanup or expiry; closing the helper also clears it.
 
+Expand **Import or save recognition results** to access the local import and save actions. No helper or Token is needed for import.
+
 **Save MinerU result** downloads document text and layout, tied to the original PDF's SHA-256. **Import saved MinerU result** checks that fingerprint and applies the file locally. Only PaperMark's saved result format is accepted, not an arbitrary Markdown file or raw service ZIP. Treat these result files as private document exports.
 
 Search/copy uses the returned text in an invisible layer, with local OCR line positions when available. Paragraph-only output needs approximate line placement. Formula/table extraction and exact glyph selection are not guaranteed. Existing source text layers, including a reopened searchable PDF, are retained rather than duplicated or replaced. Always use the original scan for correcting an old OCR layer.
@@ -31,9 +35,9 @@ Search/copy uses the returned text in an invisible layer, with local OCR line po
 默认关闭在线模式；本地 OCR、书签和可搜索 PDF 导出继续离线运行，无需 Token。
 
 1. **Windows 10/11 x64：**下载 [Windows 免安装助手 ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip)，解压后双击 **PaperMark-MinerU.exe**。无需安装 Node.js、输入命令或管理员权限。保持程序窗口打开，它会自动在默认浏览器打开本机控制页 `http://127.0.0.1:8768/`。
-2. 在控制页点击 **复制连接码**，再点击 **打开 PaperMark**。勾选 **MinerU 高精度**，将代码粘贴到 **助手连接码** 并点击 **连接**。如浏览器询问，允许访问本地网络。连接码不是 API Token。
+2. 在控制页点击 **复制连接码**，再点击 **打开 PaperMark**。先添加 PDF，再选择 **MinerU 在线识别**，将代码粘贴到 **助手连接码** 并点击 **连接助手**。如浏览器询问，允许访问本地网络。连接码不是 API Token。
 3. 在 MinerU 官网获取**你自己账号的 API Token**，填入网页密码框。项目不提供共享密钥，也不使用作者的额度。
-4. 点击 **确认上传并运行 MinerU**，核对整份文件及页数，确认后才上传。每份文件限制为 100 MB、200 页。Token 提交后从输入框清空，仅在处理期间的内存中使用，不保存到浏览器、磁盘或日志。
+4. 填写 Token 后点击 **下一步**，核对文件名和页数，勾选整份文档上传确认，再点击 **上传并开始识别**。切换文件会清空 Token 和确认；重试需要重新确认。每份文件限制为 100 MB、200 页。Token 提交后从输入框清空，仅在处理期间的内存中使用，不保存到浏览器、磁盘或日志。
 5. 核对目录后，保持 **导出可搜索 PDF** 开启并导出。保留原页面、批注、已有或手工编辑的书签；需要用新标题替换原目录时，主动点击“重新识别”。用完后在本机控制页点击 **停止助手**，或关闭助手程序窗口。仅关闭浏览器标签页不会停止程序。
 
 控制页默认英文，可点击 **中文** 切换。它不收集 API Token、不读取 PDF、不会自动联系外部网站；复制按钮仅复制本次启动的连接码。重新启动后须使用新连接码连接；重复双击会打开已运行助手的控制页。

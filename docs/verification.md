@@ -1,10 +1,19 @@
-# Verification for 0.6.0
+# Verification for 0.7.0
 
 The release was checked with synthetic PDFs. No personal research papers are included in the repository or release archives.
 
+## Guided interface checks in 0.7.0
+
+- 43 automated tests pass, including six interaction tests for the default local mode, separated credential steps, consent enforcement, language switching, late connection responses, per-file state reset, size/read-only gates and recovery.
+- Windows Chrome checks cover adding a PDF before showing settings, nine text headings, an edited bookmark surviving language changes, deferred local OCR, and 360-pixel layouts without document-level horizontal overflow.
+- A two-page Chinese scan is recognized and exported from the updated UI. Independent pypdf checks confirm unchanged image bytes, original content, geometry, annotations and original bookmark destinations, with extractable Chinese text. A local OCR character error remains in this sample; the interface update does not change recognition accuracy.
+- Simulated MinerU responses exercise the real browser client through connect, Token, explicit consent, cancellation, a rejected Token, retry, successful result application, result saving and searchable export. Connecting or entering a Token sends no PDF. Each submitted request has the expected document size and consent header. These checks do not call the paid service or use a real Token.
+- A native Windows helper pairing check and an offline saved-result import check verify the existing integration. The helper is stopped after testing. The browser retains only its language preference; manual bookmark edits survive result import.
+- The Windows package is rebuilt with its bundled runtime; its self-test runs without Node.js on PATH. Release archives are reopened and compared with their source files. Publication checks exclude private files, credentials and local paths.
+
 ## Automated checks
 
-`npm run fixtures` followed by `npm test` passes 37 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion and searchable export.
+`npm test` passes 43 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion, searchable export and the guided recognition flow.
 
 Language checks cover the English default, stored preference, unavailable browser storage, translation key/placeholder completeness, document language and accessible labels. Searchable export tests cover PDF text extraction, unchanged rendered pixels, retained outlines and annotations, 0/90/180/270-degree rotations with crop offsets, duplicate-layer prevention, disabled text layers, no-heading export and explicitly cleared bookmarks. Chinese spacing normalization retains English word spaces.
 
@@ -12,7 +21,7 @@ New checks cover small-angle deskewing, rejection of body sentences as OCR headi
 
 ## OCR comparison
 
-The recognition/export algorithms are unchanged in 0.6.0. The following comparison was made for 0.5.0; 0.6.0 changes the connection helper and usage instructions.
+The recognition/export algorithms are unchanged in 0.7.0. The following comparison was made for 0.5.0; 0.6.0 changed the helper and 0.7.0 changes the interface. It was not repeated against the paid service for 0.7.0.
 
 A fixed four-page synthetic comparison uses clean/degraded English two-column and Chinese single-column pages. Degradation reduces resolution to 100 DPI, rotates 1.2 degrees, blurs, reduces contrast and uses JPEG compression. Character errors are Levenshtein distance after whitespace removal and Unicode normalization.
 
@@ -25,7 +34,7 @@ A fixed four-page synthetic comparison uses clean/degraded English two-column an
 
 At default sensitivity, 0.4.0 produced 16 correct headings and 9 body-text false positives; 0.5.0 and the MinerU result each produced 16 correct headings and no false positives on these pages. MinerU was tested through the official API with `model_version: vlm`; returned metadata identified backend `hybrid`, version `3.4.4`. These small synthetic samples do not establish accuracy on arbitrary papers, handwriting, formulas or tables. The degraded Chinese page still has local OCR errors.
 
-## Browser checks
+## Earlier browser checks (0.4–0.6)
 
 Checked the hosted build and the single-file HTML in Windows Chrome:
 

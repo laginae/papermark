@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+- Put adding a PDF first and moved recognition settings into the selected document. Local OCR starts from one primary action; automatic OCR of subsequently added files remains available in advanced options.
+- Replaced the long MinerU setup form with three bilingual steps: connect the local helper, enter your own Token, and confirm this document's upload.
+- Show the whole-document upload notice, filename and page count before submission. Upload requires an unchecked-by-default consent box and the explicit upload button. File changes, retries and stepping back revoke consent; submission and file/mode changes clear the Token.
+- Kept searchable PDF export, original pages and bookmarks, outline editing, manual OCR, result import/save and batch export. Folded troubleshooting and secondary settings; improved narrow-screen access and readable action labels.
+- Added interaction tests for consent, asynchronous connections, bilingual state, local imports and recovery.
+
 ## 0.6.0
 
 - Added a self-contained Windows 10/11 x64 helper: extract the ZIP and double-click the program, without installing Node.js or entering commands.
