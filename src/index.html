@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Detect, edit and add PDF bookmarks locally. No uploads. Works offline." data-i18n-content="app.description">
+  <title>PaperMark · PDF bookmarks</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23245e49'/%3E%3Ctext x='10' y='31' font-size='30' fill='white'%3EP%3C/text%3E%3C/svg%3E">
+  <style>/* APP_STYLES */</style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="PaperMark home" data-i18n-aria-label="brand.home"><span class="brand-icon">P<span>▮</span></span><span>PaperMark<small data-i18n="brand.subtitle">PDF BOOKMARKS</small></span></a>
+    <div class="top-actions"><span class="privacy"><i></i><span data-i18n="privacy">Files stay on your device</span></span><select id="language" aria-label="Language / 语言"><option value="en">English</option><option value="zh-CN">简体中文</option></select><button id="help" class="quiet" data-i18n="help">How to use</button><button id="open" class="primary" data-i18n="open">＋ Add PDFs</button></div>
+  </header>
+  <input id="files" type="file" accept=".pdf,application/pdf" multiple="" hidden="">
+  <main>
+    <section id="welcome" class="welcome">
+      <div class="hero-copy"><span class="eyebrow" data-i18n="hero.eyebrow">A SMALL TOOL FOR DEEP READING</span><h1><span data-i18n="hero.first" class="hero-first">Give papers</span><br><span data-i18n="hero.last">an outline.</span></h1><p><span data-i18n="hero.intro">Turn section headings into clickable PDF bookmarks.</span><br><span data-i18n="hero.detail">Find your way back to the ideas that matter.</span></p>
+        <div class="hero-tags"><span data-i18n="tag.local">Local processing</span><span data-i18n="tag.bilingual">English &amp; Chinese headings</span><span data-i18n="tag.original">Keep originals</span></div>
+      </div>
+      <button id="dropzone" class="dropzone" aria-label="Choose or drop PDF files" data-i18n-aria-label="drop.aria">
+        <span class="paper-illustration" aria-hidden="true"><span class="ribbon"></span><span class="paper-label">RESEARCH PAPER</span><span class="paper-title">An idea worth<br>coming back to.</span><span class="paper-line"></span><span class="paper-line short"></span><span class="paper-rule"></span><span class="paper-columns">1. Introduction<br>2. Methodology<br>3. Results<span>↗<br>↗<br>↗</span></span></span>
+        <strong data-i18n="drop.title">Drop your papers here</strong><span data-i18n="drop.detail">or click to choose PDFs · multiple files welcome</span><span class="drop-detail" data-i18n="drop.privacy">No account. No uploads. Works offline.</span>
+      </button>
+      <div class="steps"><article><b>01</b><div><h3 data-i18n="step.add">Add your papers</h3><p data-i18n="step.add.detail">Read text, numbering and typography</p></div></article><article><b>02</b><div><h3 data-i18n="step.review">Review the outline</h3><p data-i18n="step.review.detail">Check pages, titles and nesting</p></div></article><article><b>03</b><div><h3 data-i18n="step.export">Export a new PDF</h3><p data-i18n="step.export.detail">Jump to sections in your PDF reader</p></div></article></div>
+      <p class="scope-note" data-i18n="scope">For PDFs with selectable text. Run OCR on scans first, and review detected headings before exporting.</p>
+    </section>
+    <section id="workspace" class="workspace" hidden="">
+      <aside class="library"><div class="section-label"><span data-i18n="library">MY PAPERS</span><span id="file-count">0</span></div><div id="queue" class="queue"></div><button id="add-more" class="outline-button" data-i18n="addMore">＋ Add more papers</button>
+        <div class="library-bottom"><div class="local-card"><span class="local-symbol">◉</span><strong data-i18n="local.title">Your papers stay with you.</strong><p data-i18n="local.detail">Files are processed in browser memory. Exports are new copies.</p></div><button id="export-all" class="outline-button" data-i18n="exportAll">Export available files as ZIP</button><button id="clear" class="quiet danger" data-i18n="clear">Clear list</button></div>
+      </aside>
+      <section class="editor"><header class="document-header"><div><span class="eyebrow" data-i18n="editor.eyebrow">BOOKMARK EDITOR</span><h2 id="doc-name">Reading…</h2><p id="doc-info"></p></div><button id="export" class="primary" disabled="" data-i18n="export">Export PDF ↗</button></header>
+        <div id="status" class="status" role="status" aria-live="polite"></div><progress id="progress" hidden=""></progress>
+        <div class="editor-columns">
+          <section class="outline-pane"><div class="pane-toolbar"><h3><span data-i18n="outline">Bookmarks</span><span id="bookmark-count">0</span></h3><button id="rescan" class="quiet small" data-i18n="rescan">Detect again</button></div>
+            <div class="outline-options"><label><span data-i18n="sensitivity">Detection</span><select id="sensitivity"><option value="balanced" data-i18n="balanced">Balanced</option><option value="strict" data-i18n="strict">Conservative</option></select></label><span id="review-count"></span></div>
+            <div id="outline-list" class="outline-list" aria-label="Bookmarks" data-i18n-aria-label="outline"></div>
+            <button id="add-bookmark" class="add-bookmark" data-i18n="addBookmark">＋ Add a bookmark on this page</button>
+            <section id="inspector" class="inspector" hidden=""><div class="inspector-title"><strong data-i18n="editSelected">Edit selected bookmark</strong><span id="entry-reason"></span></div>
+              <label><span data-i18n="title">Title</span><input id="entry-title" maxlength="500" autocomplete="off"></label>
+              <div class="form-row"><label><span data-i18n="level">Level</span><select id="entry-level"><option value="1" data-i18n="level.one">1 · Section</option><option value="2" data-i18n="level.two">2 · Subsection</option><option value="3" data-i18n="level.three">3 · Subsection</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label><label><span data-i18n="pdfPage">PDF page</span><input id="entry-page" type="number" min="1" step="1"></label><label><span data-i18n="fromTop">From top %</span><input id="entry-position" type="number" min="0" max="100" step="0.1"></label></div>
+              <div class="entry-actions"><button id="move-up" class="quiet small" title="Move up" data-i18n-title="moveUp" data-i18n="moveUp">↑ Move up</button><button id="move-down" class="quiet small" title="Move down" data-i18n-title="moveDown" data-i18n="moveDown">↓ Move down</button><button id="locate" class="quiet small" data-i18n="locate">Pick a position on page</button><button id="delete" class="quiet small danger" data-i18n="delete">Delete</button></div>
+            </section>
+            <div class="outline-footer"><button id="undo" class="quiet small" disabled="" data-i18n="undo">↶ Undo</button><button id="save-json" class="quiet small" data-i18n="saveJson">Save outline JSON</button><button id="load-json" class="quiet small" data-i18n="loadJson">Load outline</button><input id="json-file" type="file" accept=".json,application/json" hidden=""></div>
+          </section>
+          <section class="preview-pane"><div class="pane-toolbar"><h3 data-i18n="preview">Page preview</h3><div class="page-navigation"><button id="prev" class="icon-button" aria-label="Previous page" data-i18n-aria-label="previous">‹</button><label class="page-label"><input id="page" type="number" min="1" value="1" aria-label="Preview page" data-i18n-aria-label="previewPage"><span id="page-total">/ 0</span></label><button id="next" class="icon-button" aria-label="Next page" data-i18n-aria-label="next">›</button><button id="zoom-out" class="icon-button" aria-label="Zoom out" data-i18n-aria-label="zoomOut">−</button><span id="zoom-label">Fit</span><button id="zoom-in" class="icon-button" aria-label="Zoom in" data-i18n-aria-label="zoomIn">＋</button></div></div>
+            <div id="preview-scroll" class="preview-scroll"><p id="preview-empty">Choose a paper to start building its outline.</p><div id="canvas-wrap" class="canvas-wrap" hidden=""><canvas id="pdf-canvas" aria-label="PDF page preview" data-i18n-aria-label="canvas"></canvas><div id="destination" class="destination" hidden=""><span data-i18n="destination">Bookmark position</span></div></div></div>
+            <div class="preview-footer"><span id="preview-tip">Select a bookmark to check its position in the paper.</span><button id="cancel" class="quiet small" hidden="" data-i18n="cancel">Cancel detection</button></div>
+          </section>
+        </div>
+      </section>
+    </section>
+  </main>
+  <footer class="app-footer"><span>PaperMark <span class="version">{{VERSION}}</span></span><span data-i18n="footer">Find your place in every paper.</span><button id="licenses" class="quiet small" data-i18n="credits">Open source &amp; credits</button></footer>
+  <div id="toast" class="toast" role="status" hidden=""></div>
+  <dialog id="help-dialog"><div class="dialog-header"><h2 data-i18n="help.title">Give your paper an outline</h2><button class="close-dialog icon-button" aria-label="Close" data-i18n-aria-label="close">×</button></div><div class="dialog-body"><ol><li data-i18n="help.add">Add PDFs. Papers without bookmarks are analyzed automatically; existing outlines are loaded first.</li><li data-i18n="help.review">Select a bookmark to review its destination. Edit titles, levels, pages and vertical positions, or choose “Pick a position on page” and click the page.</li><li data-i18n="help.export">Export PDF to download a new copy. Use the bookmarks or outline panel in your PDF reader. This does not insert a printed table of contents.</li></ol><p data-i18n="help.rules">Balanced detection combines numbering, typography and common section names. Conservative detection filters more weak candidates. Dotted items need extra review; detection is not guaranteed for every layout.</p><p data-i18n="help.pages">Pages are counted from 1 in the actual PDF, not by printed page labels. Start at level 1; each following bookmark can go at most one level deeper.</p><p data-i18n="help.limits">Run OCR on scanned or unreadable pages first; OCR is not included. Encrypted, restricted and signed PDFs cannot be written. Limits: 100 MB and 2,000 pages per PDF; 20 files and 250 MB in total.</p><p data-i18n="help.privacy">PDFs are not uploaded or stored permanently. Closing or refreshing loses edits. Save outline JSON to resume with the same original PDF; it contains the filename, file fingerprint and outline, not the paper text. Only your language preference is saved in the browser.</p><p data-i18n="help.platform">Use a recent Chrome, Edge, Firefox or Safari. Desktop browsers can open this HTML directly. Some mobile systems require a hosted page instead of a local HTML file.</p></div></dialog>
+  <dialog id="license-dialog"><div class="dialog-header"><h2 data-i18n="credits">Open source &amp; credits</h2><button class="close-dialog icon-button" aria-label="Close" data-i18n-aria-label="close">×</button></div><div class="dialog-body"><p data-i18n="credits.detail">PDF parsing and preview: Mozilla PDF.js. Bookmark writing: pdf-lib. ZIP export: fflate. Layout and bookmark foundations are adapted from Note and PDF Voice Reader / note-reader-core under the MIT license.</p><p data-i18n="credits.source">Source code, locked dependencies and tests are included in the source package.</p><details><summary data-i18n="credits.licenses">View license texts</summary><pre>/* THIRD_PARTY_LICENSES */</pre></details></div></dialog>
+  <noscript><p data-i18n="noscript">Enable JavaScript to process PDFs locally.</p></noscript>
+  <script>/* APP_SCRIPT */</script>
+
+
+</body></html>

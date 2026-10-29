@@ -1,0 +1,12 @@
+{
+  "app": "PaperMark",
+  "version": "0.2.0",
+  "bytes": 6245050,
+  "sha256": "dd23ecd7d2baf06559be7d5c56c1f41617628bf78d1664bfc20d89bcbc960f2e",
+  "offlineResources": 186,
+  "dependencies": {
+    "fflate": "0.8.3",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "6.4.299"
+  }
+}
