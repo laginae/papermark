@@ -4,7 +4,9 @@
 
 为论文 PDF 添加可以跳转的书签目录。自动识别章节标题，核对和编辑后导出新的 PDF。全部处理在浏览器本机完成，支持离线使用。
 
-## 下载使用
+## 在线使用或下载
+
+**[直接在浏览器打开 PaperMark](https://laginae.github.io/papermark/)**，无需下载或安装。
 
 从[最新发行版](https://github.com/laginae/papermark/releases/latest)下载 **PaperMark.html**，用较新的桌面浏览器打开即可。无需安装程序、注册账号或启动服务器，也可下载离线 ZIP 包。
 
@@ -28,6 +30,8 @@
 ## 隐私与文件
 
 PDF 在浏览器内存中处理，没有上传接口、遥测、账号系统或远程运行资源。浏览器仅保存语言偏好。刷新或关闭页面会丢失当前文件和编辑。
+
+在线版首次打开时从 GitHub Pages 获取静态应用。选择 PDF 不会把文件内容或文件名发送到 GitHub。页面加载完成后，保持标签页打开，即使断网也能处理 PDF；重新打开或刷新网页可能需要联网。需要稳定的离线访问时，可使用下载版 HTML。
 
 导出另存为新文件，不覆盖原文。目录 JSON 含原文件名、SHA-256 指纹与书签；批量报告含文件名和导出结果。这些下载文件由使用者自行保管和决定是否分享。
 
@@ -56,6 +60,12 @@ npm run build
 打开 `dist/PaperMark.html` 即可。也可执行 `npm run serve` 并访问提示的本地地址。构建需要下载锁定的 npm 依赖，使用成品 HTML 不需要联网。
 
 `npm run audit:public` 检查发布白名单内的常见私人路径和凭据特征。`npm run package` 在 `release/` 生成离线包、源码包和 SHA-256 校验文件。生成的测试 PDF 与浏览器日志不进入发布包，测试文档均为合成样例。
+
+## GitHub Pages 部署
+
+部署流程检查构建哈希并审查公开文件，将已提交的 `dist/PaperMark.html` 作为网站 `index.html` 发布。网站只包含该 HTML、构建清单与许可证，没有服务端程序或上传接口。
+
+修改应用后重新构建，将更新的 `dist/` 文件提交到 `main` 即可自动部署，也可以手动触发工作流。Fork 仓库时需先在 **Settings → Pages → Source** 选择 **GitHub Actions**。执行 `node scripts/prepare-pages.cjs` 可在本机准备相同的网站文件，输出到不纳入版本控制的 `_site/` 目录。
 
 ## 开源许可
 

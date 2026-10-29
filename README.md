@@ -4,7 +4,9 @@
 
 Give research papers a clickable outline. PaperMark detects section headings in PDFs, lets you review and edit the bookmarks, and exports a new PDF. It runs locally in your browser, including without an internet connection.
 
-## Download and use
+## Open online or download
+
+**[Open PaperMark in your browser](https://laginae.github.io/papermark/)** — no download or installation required.
 
 Download **PaperMark.html** from the [latest release](https://github.com/laginae/papermark/releases/latest), then open it in a recent desktop browser. No installer, account or server is required. An offline ZIP is also available.
 
@@ -28,6 +30,8 @@ The interface starts in **English**. Choose **简体中文** in the top bar to s
 ## Privacy and file handling
 
 PDF processing happens in browser memory. The app has no upload endpoint, telemetry, account system or remote runtime resources. Only the language preference is written to browser storage. Refreshing or closing the page loses loaded files and edits.
+
+The online version downloads the static application from GitHub Pages when you open it. Selecting a PDF does not send its contents or filename to GitHub. Once the app has loaded, PDF processing works even if you disconnect from the network while keeping the tab open. Opening or refreshing the online page may need a connection; use the HTML download for reliable offline access.
 
 Export creates a new file; it does not overwrite the original. Saved outline JSON includes the original filename, SHA-256 fingerprint and bookmarks. Batch reports include filenames and export results. These downloads remain on your device unless you choose to share them.
 
@@ -56,6 +60,12 @@ npm run build
 Open `dist/PaperMark.html`, or use `npm run serve` and the local URL it prints. Building requires downloading locked npm dependencies; using the finished HTML does not require a network connection.
 
 `npm run audit:public` checks the publication allowlist for common private-path and credential patterns. `npm run package` creates the offline and source ZIPs plus SHA-256 checksums under `release/`. Generated test PDFs and browser logs are excluded from publication. Tests generate only synthetic research documents.
+
+## GitHub Pages deployment
+
+The Pages workflow publishes the committed `dist/PaperMark.html` as `index.html` after checking its build hash and auditing public files. Only that HTML, the build manifest and the license are deployed. There is no server component or upload API.
+
+After changing the app, build it and commit the updated `dist/` files to `main`; the workflow deploys automatically. It also supports manual dispatch. In a fork, enable **Settings → Pages → Source → GitHub Actions** before running the workflow. `node scripts/prepare-pages.cjs` prepares the same site locally under the ignored `_site/` directory.
 
 ## Credits and license
 

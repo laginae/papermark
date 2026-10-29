@@ -1,6 +1,7 @@
 node_modules/
 qa/
 release/
+_site/
 .playwright-cli/
 .history/
 .vscode/

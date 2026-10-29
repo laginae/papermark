@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('node:fs'), path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const roots = ['.gitattributes', '.gitignore', 'LICENSE', 'README.md', 'README.zh-CN.md', 'CHANGELOG.md', 'package.json', 'package-lock.json'];
+const roots = ['.gitattributes', '.gitignore', '.github/workflows/pages.yml', 'LICENSE', 'README.md', 'README.zh-CN.md', 'CHANGELOG.md', 'package.json', 'package-lock.json'];
 const folders = ['src', 'tests', 'scripts', 'licenses', 'docs', 'dist'];
 function publicFiles() {
   const files = [...roots];
