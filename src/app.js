@@ -5,6 +5,9 @@ import { zipSync } from 'fflate';
 import { scanPdfOutline } from './pdf-outline';
 import { detectWithOcr, ocrLayout } from './ocr-layout';
 import { createLocalOcr } from './ocr';
+import { createPaddleOcr } from './paddle-ocr';
+import { createImageComposer } from './image-composer';
+import { createHostBridge } from './host-bridge';
 import {prepareOcrCanvas} from './ocr-preprocess';
 import {createMineruClient} from './mineru-client';
 import {createRecognitionFlow} from './recognition-flow';
@@ -19,7 +22,7 @@ import { t, getLanguage, restoreLanguage, saveLanguage, translateDom, uiError, r
 const $ = id => document.getElementById(id);
 function languageStorage() { try { return window.localStorage; } catch { return null; } }
 restoreLanguage(languageStorage());
-const records = []; let current = null, scanning = false, exporting = false, cancelled = false;
+const records = []; let current = null, scanning = false, exporting = false, composing = false, cancelled = false;
 let nextId = 1, selection = -1, currentPage = 1, zoom = 1, renderTask = null, renderGeneration = 0;
 let viewport = null, locating = false, toastTimer, renderTimer, ocrAbort = null;
 const workerUrl = URL.createObjectURL(new Blob([workerCode], { type: 'text/javascript' }));
@@ -32,9 +35,9 @@ class EmbeddedBinaryDataFactory {
 }
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 const clone = value => JSON.parse(JSON.stringify(value));
-const busy = () => scanning || exporting;
+const busy = () => scanning || exporting || composing;
 const hasTextExport = doc => $('searchable').checked && !!doc?.model && textLayerPages(doc.model.pages).length>0;
-const canExport = doc => doc?.writable && doc?.model && !doc.error && (doc.entries.length>0 || hasTextExport(doc));
+const canExport = doc => doc?.writable && doc?.model && !doc.error && (doc.generated || doc.entries.length>0 || hasTextExport(doc));
 const entry = () => current?.entries?.[selection];
 const recognition = createRecognitionFlow(document, {
   connect: async code => { const client = createMineruClient(code); await client.check(); return client; },
@@ -43,6 +46,17 @@ const recognition = createRecognitionFlow(document, {
   onReview: () => { $('bookmark-editor').scrollIntoView({block:'start', behavior:'smooth'}); $('bookmark-editor').focus({preventScroll:true}); },
   onMode: () => setControls()
 });
+const host=createHostBridge({
+  onInit:data=>{saveLanguage(data.language,languageStorage());$('open-device').hidden=false;$('images-vault').hidden=false;$('paddle-options').hidden=!data.desktop;refreshLanguage();},
+  onFiles:files=>{if(busy())throw uiError('host.busy');return acceptFiles(files);}
+});
+const images=createImageComposer(document,{onCreate:file=>addFiles([file],{generated:true}),onError:error=>toast(friendlyError(error),true),onBusy:value=>{composing=value;setControls();},pickVault:()=>host.pick('images')});
+async function acceptFiles(files) {
+  const pictures=[...files].filter(file=>/\.(png|jpe?g|webp)$/i.test(file.name));
+  const pdfs=[...files].filter(file=>/\.pdf$/i.test(file.name));
+  if(pdfs.length)await addFiles(pdfs);if(pictures.length)await images.add(pictures);
+}
+async function choosePdf(){try{if(host.connected)await addFiles(await host.pick('pdf'));else $('files').click();}catch(error){toast(friendlyError(error),true);}}
 function toast(message, error = false) {
   clearTimeout(toastTimer); $('toast').textContent = message; $('toast').classList.toggle('error', error);
   $('toast').hidden = false; toastTimer = setTimeout(() => $('toast').hidden = true, error ? 9000 : 5000);
@@ -102,6 +116,7 @@ function renderQueue() {
 function setControls() {
   const ready = current?.model && current?.status === 'ready';
   $('open').disabled = $('add-more').disabled = busy();
+  $('images-open').disabled = $('open-device').disabled = $('ocr-engine').disabled = busy();
   $('auto-ocr').disabled = $('ocr-language').disabled = $('ocr-range').disabled = busy();
   $('searchable').disabled = busy();
   recognition.update({doc:current, busy:busy()});
@@ -213,7 +228,7 @@ function markDestination() {
   $('destination').style.left = `${Math.max(0, Math.min(viewport.width - 64, x))}px`;
   $('destination').style.top = `${Math.max(0, Math.min(viewport.height, y))}px`;
 }
-async function addFiles(files) {
+async function addFiles(files,{generated=false}={}) {
   if (busy()) return;
   const candidates = [...files]; if (!candidates.length) return;
   scanning = true; cancelled = false; renderQueue();
@@ -226,7 +241,7 @@ async function addFiles(files) {
     }
     total += file.size;
     const doc = { id: nextId++, name: file.name, size: file.size, status: 'loading', sensitivity: $('sensitivity').value,
-      entries: [], history: [], dirty: false, writable: true, selected: -1 };
+      entries: [], history: [], dirty: false, writable: true, selected: -1, generated };
     records.push(doc); selectDocument(doc);
     try {
       doc.bytes = new Uint8Array(await file.arrayBuffer());
@@ -265,7 +280,8 @@ async function addFiles(files) {
   }
   scanning = false; setControls(); if (cancelled) toast(t('cancel.done'));
 }
-function download(bytes, filename, type) {
+async function download(bytes, filename, type) {
+  if(host.connected){const saved=await host.save(bytes,filename,type);if(!saved)throw uiError('host.cancelled');return;}
   const url = URL.createObjectURL(new Blob([bytes], { type })), link = document.createElement('a');
   link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
@@ -280,7 +296,7 @@ async function exportCurrent() {
   exporting = true; setControls(); const doc = current; status(t('export.writing'));
   try {
     await tick(); const {bytes,textPages} = await exportDocument(doc);
-    download(bytes, safeFilename(doc.name,textPages ? '.searchable.pdf' : '.with-bookmarks.pdf'), 'application/pdf');
+    await download(bytes, safeFilename(doc.name,textPages ? '.searchable.pdf' : '.with-bookmarks.pdf'), 'application/pdf');
     toast(t(textPages ? 'export.searchableDone' : 'export.done',{count:textPages}));
   } catch (error) { toast(friendlyError(error), true); }
   finally { exporting = false; setControls(); refreshStatus(); }
@@ -300,7 +316,7 @@ async function exportAll() {
     }
     if (!Object.keys(files).length) throw uiError('export.none');
     files['export-report.json'] = new TextEncoder().encode(JSON.stringify({ app: `PaperMark ${__APP_VERSION__}`, files: report }, null, 2));
-    download(zipSync(files, { level: 0 }), 'PaperMark-bookmarked.zip', 'application/zip');
+    await download(zipSync(files, { level: 0 }), 'PaperMark-bookmarked.zip', 'application/zip');
     const count = report.filter(r => r.status === 'exported').length;
     toast(t('export.batch', { count }) + (count < report.length ? ' ' + t('export.skipped', { count: report.length - count }) : ''));
   } catch (error) { toast(friendlyError(error), true); }
@@ -318,13 +334,15 @@ async function performOcr(doc, all = false) {
   };
   try {
     update('ocr.resources');
-    engine=await createLocalOcr({language:$('ocr-language').value,signal:controller.signal,progress:({stage,fraction})=>{
+    const paddle=host.connected&&host.desktop&&$('ocr-engine').value!=='builtin';
+    const engineFactory=paddle?createPaddleOcr:createLocalOcr;
+    engine=await engineFactory({host,model:$('ocr-engine').value,language:$('ocr-language').value,signal:controller.signal,progress:({stage,fraction})=>{
       update(pageNumber ? 'ocr.progress' : stage==='resources' ? 'ocr.resources' : 'ocr.preparing',fraction);
     }});
     for (const n of candidates) {
       controller.signal.throwIfAborted(); pageNumber=n; update('ocr.progress');
       const pdfPage=await doc.pdf.getPage(n), base=pdfPage.getViewport({scale:1});
-      const scale=Math.min(240/72,Math.sqrt(6000000/(base.width*base.height)));
+      const scale=Math.min(240/72,Math.sqrt((paddle?3900000:6000000)/(base.width*base.height)),paddle?2400/Math.max(base.width,base.height):Infinity);
       let view=pdfPage.getViewport({scale});const canvas=document.createElement('canvas');
       canvas.width=Math.ceil(view.width); canvas.height=Math.ceil(view.height);
       let task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:view,annotationMode:pdfjs.AnnotationMode.DISABLE});
@@ -336,7 +354,7 @@ async function performOcr(doc, all = false) {
         let pixelWidth=canvas.width,pixelHeight=canvas.height;
         // More pixels are not always more accurate. Retry weak pages, keeping
         // the first pass unless the engine's confidence actually improves.
-        if((result.confidence||0)<88){
+        if(!paddle&&(result.confidence||0)<88){
           const high=pdfPage.getViewport({scale:Math.min(300/72,Math.sqrt(9000000/(base.width*base.height)))});
           canvas.width=Math.ceil(high.width);canvas.height=Math.ceil(high.height);
           task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:high,annotationMode:pdfjs.AnnotationMode.DISABLE});await task.promise;
@@ -349,9 +367,9 @@ async function performOcr(doc, all = false) {
         const chars=doc.model.pages.reduce((sum,p)=>sum+(p.number===n ? 0 : (p.ocrLayout?.text.length ?? p.text.length)),0)+layout.text.length;
         if(chars>5000000) throw uiError('error.textLimit');
         doc.model.pages[n-1].ocrLayout=layout;
-        doc.model.pages[n-1].ocrPdf=result.pdf;
-        doc.model.pages[n-1].ocrPixelWidth=pixelWidth;
-        doc.model.pages[n-1].ocrPixelHeight=pixelHeight;
+        doc.model.pages[n-1].ocrPdf=paddle?await createUnicodeTextLayer(layout):result.pdf;
+        doc.model.pages[n-1].ocrPixelWidth=paddle?layout.width:pixelWidth;
+        doc.model.pages[n-1].ocrPixelHeight=paddle?layout.height:pixelHeight;
         doc.ocrChanged=true;
         update('ocr.progress',1);
       } finally {
@@ -469,10 +487,10 @@ function moveEntry(direction) {
   const target = selection + direction; if (target < 0 || target >= current.entries.length) return;
   snapshot(); const [row] = current.entries.splice(selection, 1); current.entries.splice(target, 0, row); selection = target; edited();
 }
-function saveJson() {
+async function saveJson() {
   if (!current?.model) return;
-  download(JSON.stringify({ format: 'papermark-outline', version: 1, source: current.name, sha256: current.fingerprint,
-    pages: current.pdf.numPages, entries: current.entries }, null, 2), safeFilename(current.name, '.bookmarks.json'), 'application/json');
+  try{await download(JSON.stringify({ format: 'papermark-outline', version: 1, source: current.name, sha256: current.fingerprint,
+    pages: current.pdf.numPages, entries: current.entries }, null, 2), safeFilename(current.name, '.bookmarks.json'), 'application/json');}catch(error){toast(friendlyError(error),true);}
 }
 async function loadJson(file) {
   if (!file || !current?.model || busy()) return;
@@ -488,19 +506,21 @@ async function loadJson(file) {
   } catch (error) { toast(friendlyError(error), true); }
 }
 
-for (const id of ['open','add-more','dropzone']) $(id).onclick = () => $('files').click();
+for (const id of ['open','add-more','dropzone']) $(id).onclick = choosePdf;
+$('open-device').onclick=()=>$('files').click();
+$('images-open').onclick=()=>images.open();
 $('files').onchange = event => { const files = [...event.target.files]; event.target.value = ''; addFiles(files); };
 let dragDepth = 0;
 document.addEventListener('dragenter', event => { if (event.dataTransfer?.types.includes('Files')) { event.preventDefault(); dragDepth++; document.body.classList.add('drag-over'); } });
 document.addEventListener('dragover', event => { if (event.dataTransfer?.types.includes('Files')) event.preventDefault(); });
 document.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('drag-over'); } });
-document.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; document.body.classList.remove('drag-over'); addFiles(event.dataTransfer.files); });
+document.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; document.body.classList.remove('drag-over'); if(!busy())acceptFiles(event.dataTransfer.files); });
 $('export').onclick = exportCurrent; $('export-all').onclick = exportAll;
 $('rescan').onclick = rescan; $('add-bookmark').onclick = addBookmark;
 $('ocr-run').onclick = () => runOcr();
-$('mineru-import').onclick=()=>$('mineru-file').click();
+$('mineru-import').onclick=async()=>{try{if(host.connected)await importMineru((await host.pick('json'))[0]);else $('mineru-file').click();}catch(error){toast(friendlyError(error),true);}};
 $('mineru-file').onchange=event=>{importMineru(event.target.files[0]);event.target.value='';};
-$('mineru-save').onclick=()=>{if(current?.mineruResult)download(new TextEncoder().encode(JSON.stringify(current.mineruResult)),safeFilename(current.name,'.mineru.json'),'application/json');};
+$('mineru-save').onclick=async()=>{try{if(current?.mineruResult)await download(new TextEncoder().encode(JSON.stringify(current.mineruResult)),safeFilename(current.name,'.mineru.json'),'application/json');}catch(error){toast(friendlyError(error),true);}};
 for (const id of ['entry-title','entry-level','entry-page','entry-position']) $(id).onchange = () => editField(id);
 $('move-up').onclick = () => moveEntry(-1); $('move-down').onclick = () => moveEntry(1);
 $('delete').onclick = () => {
@@ -545,11 +565,11 @@ $('clear').onclick = async () => {
   }
   records.length = 0; current = null; viewport = null; selection = -1; renderQueue();
 };
-$('save-json').onclick = saveJson; $('load-json').onclick = () => $('json-file').click();
+$('save-json').onclick = saveJson; $('load-json').onclick = async () => {try{if(host.connected)await loadJson((await host.pick('json'))[0]);else $('json-file').click();}catch(error){toast(friendlyError(error),true);}};
 $('json-file').onchange = event => { loadJson(event.target.files[0]); event.target.value = ''; };
 $('help').onclick = () => $('help-dialog').showModal(); $('licenses').onclick = () => $('license-dialog').showModal();
 document.querySelectorAll('.close-dialog').forEach(button => button.onclick = () => button.closest('dialog').close());
-for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { if (event.target === dialog && !(dialog.id==='images-dialog'&&composing)) dialog.close(); });
 document.querySelector('.brand').onclick = event => { event.preventDefault(); if (!records.length) window.scrollTo({ top: 0 }); };
 window.addEventListener('resize', () => requestRender());
 window.addEventListener('beforeunload', event => { if (records.some(doc => doc.dirty || doc.ocrChanged)) { event.preventDefault(); event.returnValue = ''; } });
@@ -576,7 +596,8 @@ for(const button of document.querySelectorAll('[data-language]')) button.onclick
     // activate the language button without moving focus.
     if(document.activeElement?.id===field) editField(field);
   }
-  saveLanguage(button.dataset.language, languageStorage()); refreshLanguage();
+  saveLanguage(button.dataset.language, languageStorage()); host.language(getLanguage());refreshLanguage();images.refresh();
 };
+window.addEventListener('papermark-dispose',()=>{cancelled=true;ocrAbort?.abort();images.dispose();for(const doc of records){doc.workerPort?.terminate();}URL.revokeObjectURL(workerUrl);});
 refreshLanguage();
 window.paperMarkStartup?.ready();

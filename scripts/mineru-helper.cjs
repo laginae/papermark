@@ -7,7 +7,7 @@ const {unzipSync}=require('fflate');
 const {dashboard}=require('./helper-dashboard.cjs');
 const VERSION=require('../package.json').version;
 const API='https://mineru.net/api/v4',PORT=8768,MAX_PDF=100*1024**2;
-const origins=new Set(['https://laginae.github.io','http://127.0.0.1:8765','http://127.0.0.1:8766','http://localhost:8765','http://localhost:8766','null']);
+const origins=new Set(['https://laginae.github.io','app://obsidian.md','http://127.0.0.1:8765','http://127.0.0.1:8766','http://localhost:8765','http://localhost:8766','null']);
 const uploadHosts=new Set(['mineru.oss-cn-shanghai.aliyuncs.com']);
 const resultHosts=new Set(['cdn-mineru.openxlab.org.cn','mineru.oss-cn-shanghai.aliyuncs.com']);
 const pause=(ms,signal)=>new Promise((resolve,reject)=>{signal.throwIfAborted();const done=()=>{clearTimeout(timer);signal.removeEventListener('abort',abort);};const timer=setTimeout(()=>{done();resolve();},ms);const abort=()=>{done();reject(new Error('cancelled'));};signal.addEventListener('abort',abort,{once:true});});

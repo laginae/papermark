@@ -22,6 +22,9 @@ On first open, wait for the **Loading PaperMark…** notice to disappear before 
 
 ## Features
 
+- Obsidian workspace with vault-file selection and non-overwriting exports; see the [plugin installation guide](docs/obsidian.md).
+- Merge JPG/PNG/WebP images into PDFs, with page ordering, rotation, natural filename sorting and image-sized or A4 pages.
+- Optional desktop Paddle Small/Tiny OCR using the local Cozy helper; built-in Tesseract remains the default.
 - English and Chinese heading detection using numbering, font size and page layout.
 - Local OCR for scanned pages, with English and Simplified Chinese models, progress and cancellation.
 - Searchable PDF export with selectable, copyable OCR text, preserving page images and existing bookmarks.

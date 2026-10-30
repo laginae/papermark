@@ -17,6 +17,8 @@ test('paired helper requires allowed origin, exact host, connection code and exp
   const spoofed=await new Promise((resolve,reject)=>require('node:http').get(base+'/health',{headers:{...headers,Host:'untrusted.example'}},response=>{response.resume();resolve(response.statusCode);}).on('error',reject));assert.equal(spoofed,403);
   assert.equal((await fetch(base+'/health',{headers:{...headers,'X-PaperMark-Connection':'x'.repeat(48)}})).status,403);
   const response=await fetch(base+'/health',{headers});assert.equal(response.status,200);assert.equal((await response.json()).tokenStorage,'none');
+  const obsidian=await fetch(base+'/health',{headers:{...headers,Origin:'app://obsidian.md'}});assert.equal(obsidian.status,200);assert.equal(obsidian.headers.get('access-control-allow-origin'),'app://obsidian.md');
+  assert.equal((await fetch(base+'/health',{headers:{...headers,Origin:'app://untrusted.md'}})).status,403);
   const preflight=await fetch(base+'/jobs',{method:'OPTIONS',headers:{Origin:headers.Origin}});assert.equal(preflight.status,204);assert.equal(preflight.headers.get('access-control-allow-origin'),headers.Origin);
   const doc=await PDFDocument.create();doc.addPage();const bytes=await doc.save();
   const token='synthetic-test-token-value';

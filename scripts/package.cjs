@@ -23,6 +23,8 @@ function pack(label,names,transform) {
 }
 offline.push('dist/PaperMark-MinerU-helper.cjs');
 const assets=[pack('offline',offline,name=>name.replace(/^dist\//,'')),pack('source',source,name=>`PaperMark-${version}/${name}`),'PaperMark.html','PaperMark-MinerU-helper.cjs'];
+assets.push(pack('obsidian',['dist/obsidian/main.js','dist/obsidian/manifest.json','dist/obsidian/styles.css'],name=>name.replace('dist/obsidian/','papermark/')));
+for(const name of ['main.js','manifest.json','styles.css']){fs.copyFileSync(path.join(root,'dist/obsidian',name),path.join(out,name));assets.push(name);}
 fs.copyFileSync(path.join(root,'dist/PaperMark.html'),path.join(out,'PaperMark.html'));
 fs.copyFileSync(path.join(root,'dist/PaperMark-MinerU-helper.cjs'),path.join(out,'PaperMark-MinerU-helper.cjs'));
 const nativeInfo=path.join(out,'PaperMark-MinerU-Windows-x64-build.json');

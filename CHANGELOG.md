@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0
+
+- Add the Obsidian plugin: a self-contained workspace, vault pickers, file context menus, bilingual settings and new-file exports that preserve originals and avoid name collisions.
+- Merge JPG/PNG/WebP images into PDFs with ordering, rotation, filename sorting and image-sized/A4 pages. Continue directly to OCR and bookmark editing; image merging is also available in the web and offline apps.
+- Add optional desktop Paddle Small/Tiny OCR through the local Cozy helper, with validated process messages, bounded page sizes, cancellation and task-scoped process lifetime. Built-in Tesseract remains the default.
+- Preserve OCR line geometry and apply column-aware ordering before generating searchable Unicode text and bookmarks. Existing page images and original/edited bookmarks remain intact.
+- Retain all existing features and per-document MinerU upload consent. Allow the exact Obsidian origin in the paired local MinerU helper.
+- Package a standard three-file plugin and add image geometry, text extraction, source-pixel preservation, vault-path/collision and native-process regression checks.
+
 ## 0.7.1
 
 - Show a loading notice before the PDF engine starts, keep the interface unavailable until its handlers are ready, and offer reload guidance on slow or failed startup.
