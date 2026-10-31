@@ -2,7 +2,7 @@ import embedded from 'embedded-ocr';
 import { uiError } from './i18n';
 
 let resources;
-export async function createLocalOcr({language='eng+chi_sim',signal,progress=()=>{}}) {
+export async function createLocalOcr({language='eng+chi_sim',signal,progress=()=>{},contents=false}) {
   signal.throwIfAborted(); progress({stage:'resources',fraction:0});
   if (!resources) {
     if (embedded.data) resources=embedded.data;
@@ -50,7 +50,9 @@ export async function createLocalOcr({language='eng+chi_sim',signal,progress=()=
     // fetch/importScripts implementations reject every other destination.
     await call('loadLanguage',{langs:language,options:{langPath:'https://papermark.invalid/ocr',cacheMethod:'none',gzip:true,lstmOnly:true}});
     await call('initialize',{langs:language,oem:1,config:{}});
-    await call('setParameters',{params:{tessedit_pageseg_mode:'3',user_defined_dpi:'300'}});
+    // Treat contents as one text block so isolated right-hand numbers are not
+    // discarded as separate noise. Word boxes reconstruct columns afterwards.
+    await call('setParameters',{params:{tessedit_pageseg_mode:contents?'6':'3',user_defined_dpi:'300'}});
     return {
       recognize:async canvas=>{
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));

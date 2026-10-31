@@ -49,7 +49,7 @@ const escapeHtml = text => text.replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
         contents: `export default ${JSON.stringify(args.path === 'embedded-worker' ? worker.outputFiles[0].text : args.path==='embedded-resources' ? resources : {data:standalone ? ocr : null,file:ocrFile,sha256:ocrHash})}`, loader: 'js' }));
     } }] });
   // The replacement callback avoids interpreting dollar sequences in bundled code.
-  return template.replace('/* APP_STYLES */', () => read('src/styles.css')+'\n'+read('src/mineru.css'))
+  return template.replace('/* APP_STYLES */', () => read('src/styles.css')+'\n'+read('src/mineru.css')+'\n'+read('src/book.css'))
     .replaceAll('{{VERSION}}', pkg.version)
     .replace('/* STARTUP_SCRIPT */', () => read('src/startup.js'))
     .replace('/* THIRD_PARTY_LICENSES */', () => escapeHtml(licenseTexts.join('\n\n')))

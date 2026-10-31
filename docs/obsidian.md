@@ -6,7 +6,7 @@ PaperMark opens a PDF workspace inside Obsidian. It merges images into PDFs, add
 
 ## Install
 
-1. Download **PaperMark-0.8.0-obsidian.zip** from the [0.8.0 release](https://github.com/laginae/papermark/releases/tag/v0.8.0).
+1. Download **PaperMark-0.9.0-obsidian.zip** from the [0.9.0 release](https://github.com/laginae/papermark/releases/tag/v0.9.0).
 2. Extract the `papermark` folder into your vault's `.obsidian/plugins/` folder. It must contain `main.js`, `manifest.json` and `styles.css` directly, without an extra nested folder.
 3. Restart Obsidian or reload its plugins, then enable **PaperMark** under **Settings → Community plugins**.
 4. Click the PaperMark ribbon icon or run **PaperMark: Open PaperMark** from the command palette.
@@ -24,6 +24,10 @@ To merge without OCR, export immediately after creating the PDF. To edit an exis
 
 Search and copy text in the **exported PDF**, using Obsidian's PDF reader or another PDF reader. The PaperMark preview is a canvas for checking pages and bookmark positions. OCR does not replace the page image. Existing text layers are not duplicated or repaired; existing and manually edited bookmarks are retained until you choose to rebuild them.
 
+## Scanned book contents
+
+Select **Book contents pages**, read the printed contents, calibrate page numbers, then review and apply the draft. This uses your chosen local engine, including Paddle Small. Existing bookmarks are kept by default. See the [book contents guide](book-contents.md) for manual page anchors, inserted-page handling and whole-book searchable text.
+
 ## Optional Paddle OCR on desktop
 
 The built-in Tesseract engine is the default. PaperMark can also use the **Cozy OCR helper**, based on [SimdPaddleOCR](https://github.com/sdcb/SimdPaddleOCR). **Small** favors recognition quality; **Tiny** favors speed. A prior comparison on ten synthetic printed-text pages favored Small for body text; this is not a guarantee for your scanned papers, tables or equations. Check important quotations against the image.
@@ -34,7 +38,7 @@ For Windows x64:
 2. In **Settings → PaperMark**, enter the full path to `CozyOcr.exe`. Use a trusted copy: the plugin will execute this file on your computer.
 3. In the workspace, open **Local OCR options → Local OCR engine** and choose **Paddle Small** or **Paddle Tiny**, then run OCR. No separate manual launch is necessary.
 
-The helper starts only for a Paddle OCR task. Pixels pass through local process pipes; no PDF upload, API Token or listening network service is needed. It is stopped after recognition, cancellation or workspace closure. Allow several hundred MB of additional memory. The setting stores only the executable path; documents and recognized text are not saved in plugin settings.
+The helper starts only for a Paddle OCR task. Pixels pass through local process pipes; no PDF upload, API Token or listening network service is needed. It is stopped after recognition, cancellation or workspace closure. Allow several hundred MB of additional memory. The settings store the executable path and preferred OCR engine; documents and recognized text are not saved in plugin settings.
 
 The helper is optional and separate from the **MinerU helper**. The Windows helper does not run on macOS/Linux. Native helper builds for those systems require separate validation; use built-in OCR there for now. Mobile cannot launch the Paddle helper.
 
@@ -43,7 +47,7 @@ The helper is optional and separate from the **MinerU helper**. The Windows help
 - Default processing stays on the device. The plugin has no analytics and no automatic document uploads.
 - MinerU remains opt-in. It needs your own Token and the existing local MinerU connection helper. Each document requires explicit whole-PDF upload consent. Use the PaperMark 0.8.0 helper or newer for the Obsidian origin. Token handling and saved-result imports work as in the browser version; see the [MinerU guide](mineru.md).
 - Only selected files are read. Export prompts for a vault destination and never intentionally overwrites an existing file. If your vault is synced by another application, that application's sync also applies to saved outputs.
-- Language and export-folder preferences, and the optional helper executable path, are saved in Obsidian's plugin settings. Tokens and document contents are not.
+- Language, export-folder and OCR-engine preferences, and the optional helper executable path, are saved in Obsidian's plugin settings. Tokens and document contents are not.
 - Closing/reloading the workspace discards unsaved files and edits. Export your PDF or outline JSON first. Changing the language in the workspace preserves edits; settings changes apply when a workspace is reopened.
 - PDF limits: 20 files, 100 MB per file, 250 MB total and 2,000 pages per PDF. Images: 100 files, 20 MB and 25 megapixels per image, 200 MB total. Large scans may be slow or exceed available memory.
 - Verified on Windows x64 with Obsidian 1.14.4 and in Chrome. The core uses Obsidian's portable vault APIs; macOS, Linux and mobile have not been device-tested for this release. Minimum declared Obsidian version: 1.8.7. Use smaller batches on mobile.

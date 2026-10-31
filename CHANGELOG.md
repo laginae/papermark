@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0
+
+- Add a local scanned-book contents workflow: find or select contents pages, reconstruct single/two-column rows, infer numbering/indentation hierarchy, then review a separate editable draft.
+- Calibrate Arabic, Roman and chapter-local printed page numbers using page labels, unique body titles and supported offsets. Handle segment changes conservatively; allow manual page anchors and per-entry corrections.
+- Require review before applying contents. Append by default to preserve current bookmarks, offer explicit replacement and keep Undo. Retain searchable OCR export, original pages, image merging, bilingual UI and optional MinerU upload consent.
+- Reuse built-in OCR and the configured Obsidian Paddle Small/Tiny helper. Render OCR pages independently of animation frames so recognition can finish while Obsidian is in the background.
+- Include the Obsidian OCR-engine preference from 0.8.1, bilingual book instructions and regression tests for layout, calibration, conflicts and review state.
+
+## 0.8.1
+
+- Remember the selected local OCR engine in Obsidian and expose it in plugin settings. A configured Paddle Small/Tiny choice is restored when reopening the workspace; new installations still default to built-in OCR.
+- Keep native OCR off on mobile and keep recognition user-initiated. Saving an engine preference never starts an OCR process or enables MinerU.
+
 ## 0.8.0
 
 - Add the Obsidian plugin: a self-contained workspace, vault pickers, file context menus, bilingual settings and new-file exports that preserve originals and avoid name collisions.

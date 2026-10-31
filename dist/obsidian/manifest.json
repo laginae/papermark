@@ -1,7 +1,7 @@
 {
   "id": "papermark",
   "name": "PaperMark",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "minAppVersion": "1.8.7",
   "description": "Merge images into PDFs, add searchable local OCR text and edit PDF bookmarks. English and Chinese interfaces.",
   "author": "PaperMark contributors",

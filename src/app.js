@@ -7,6 +7,8 @@ import { detectWithOcr, ocrLayout } from './ocr-layout';
 import { createLocalOcr } from './ocr';
 import { createPaddleOcr } from './paddle-ocr';
 import { createImageComposer } from './image-composer';
+import { createBookFlow } from './book-flow';
+import { parsePageRange, parseContents, isContentsPage, calibrate, calibrationSample, appendContents } from './book-toc';
 import { createHostBridge } from './host-bridge';
 import {prepareOcrCanvas} from './ocr-preprocess';
 import {createMineruClient} from './mineru-client';
@@ -47,10 +49,19 @@ const recognition = createRecognitionFlow(document, {
   onMode: () => setControls()
 });
 const host=createHostBridge({
-  onInit:data=>{saveLanguage(data.language,languageStorage());$('open-device').hidden=false;$('images-vault').hidden=false;$('paddle-options').hidden=!data.desktop;refreshLanguage();},
+  onInit:data=>{saveLanguage(data.language,languageStorage());$('open-device').hidden=false;$('images-vault').hidden=false;$('paddle-options').hidden=!data.desktop;$('ocr-engine').value=data.desktop&&['small','tiny'].includes(data.ocrEngine)?data.ocrEngine:'builtin';refreshLanguage();},
   onFiles:files=>{if(busy())throw uiError('host.busy');return acceptFiles(files);}
 });
 const images=createImageComposer(document,{onCreate:file=>addFiles([file],{generated:true}),onError:error=>toast(friendlyError(error),true),onBusy:value=>{composing=value;setControls();},pickVault:()=>host.pick('images')});
+const book=createBookFlow(document,{
+  onWork:runBookWork,
+  onError:error=>toast(friendlyError(error),true),
+  onPreview:n=>{currentPage=n;requestRender(true);$('preview-scroll').scrollIntoView({block:'center',behavior:'smooth'});},
+  onApply:(entries,replace)=>{
+    const combined=replace?entries:appendContents(current.entries,entries);
+    validateEntries(combined,current.model.pages);snapshot();current.entries=combined;selection=0;edited();
+  }
+});
 async function acceptFiles(files) {
   const pictures=[...files].filter(file=>/\.(png|jpe?g|webp)$/i.test(file.name));
   const pdfs=[...files].filter(file=>/\.pdf$/i.test(file.name));
@@ -120,6 +131,7 @@ function setControls() {
   $('auto-ocr').disabled = $('ocr-language').disabled = $('ocr-range').disabled = busy();
   $('searchable').disabled = busy();
   recognition.update({doc:current, busy:busy()});
+  book.update({doc:current,busy:busy()});
   $('ocr-run').disabled = !ready || busy();
   $('export').disabled = !ready || !canExport(current) || busy();
   $('export-all').disabled = busy() || !records.some(canExport);
@@ -322,8 +334,8 @@ async function exportAll() {
   } catch (error) { toast(friendlyError(error), true); }
   finally { exporting = false; setControls(); refreshStatus(); }
 }
-async function performOcr(doc, all = false) {
-  const candidates=all ? doc.model.pages.map(p=>p.number) : doc.model.imagePages.filter(n=>!doc.model.pages[n-1].ocrLayout);
+async function performOcr(doc, all = false, selectedPages = null, contents = false) {
+  const candidates=selectedPages || (all ? doc.model.pages.map(p=>p.number) : doc.model.imagePages.filter(n=>!doc.model.pages[n-1].ocrLayout));
   if (!candidates.length) { toast(t('ocr.noPages')); return; }
   const controller=new AbortController(); ocrAbort=controller; let engine=null, pageNumber=0;
   doc.ocrWarning=null;
@@ -336,7 +348,7 @@ async function performOcr(doc, all = false) {
     update('ocr.resources');
     const paddle=host.connected&&host.desktop&&$('ocr-engine').value!=='builtin';
     const engineFactory=paddle?createPaddleOcr:createLocalOcr;
-    engine=await engineFactory({host,model:$('ocr-engine').value,language:$('ocr-language').value,signal:controller.signal,progress:({stage,fraction})=>{
+    engine=await engineFactory({host,model:$('ocr-engine').value,language:$('ocr-language').value,contents,signal:controller.signal,progress:({stage,fraction})=>{
       update(pageNumber ? 'ocr.progress' : stage==='resources' ? 'ocr.resources' : 'ocr.preparing',fraction);
     }});
     for (const n of candidates) {
@@ -345,7 +357,7 @@ async function performOcr(doc, all = false) {
       const scale=Math.min(240/72,Math.sqrt((paddle?3900000:6000000)/(base.width*base.height)),paddle?2400/Math.max(base.width,base.height):Infinity);
       let view=pdfPage.getViewport({scale});const canvas=document.createElement('canvas');
       canvas.width=Math.ceil(view.width); canvas.height=Math.ceil(view.height);
-      let task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:view,annotationMode:pdfjs.AnnotationMode.DISABLE});
+      let task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:view,intent:'print',annotationMode:pdfjs.AnnotationMode.DISABLE});
       const abortRender=()=>task.cancel(); controller.signal.addEventListener('abort',abortRender,{once:true});
       try {
         await task.promise; controller.signal.throwIfAborted();
@@ -357,13 +369,14 @@ async function performOcr(doc, all = false) {
         if(!paddle&&(result.confidence||0)<88){
           const high=pdfPage.getViewport({scale:Math.min(300/72,Math.sqrt(9000000/(base.width*base.height)))});
           canvas.width=Math.ceil(high.width);canvas.height=Math.ceil(high.height);
-          task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:high,annotationMode:pdfjs.AnnotationMode.DISABLE});await task.promise;
+          task=pdfPage.render({canvasContext:canvas.getContext('2d'),viewport:high,intent:'print',annotationMode:pdfjs.AnnotationMode.DISABLE});await task.promise;
           const retry=await prepareOcrCanvas(canvas,high);let candidate;
           try{candidate=await engine.recognize(retry.canvas);}finally{retry.canvas.width=retry.canvas.height=1;}
           if(candidate.confidence>(result.confidence||0)+1){result=candidate;prepared=retry;pixelWidth=canvas.width;pixelHeight=canvas.height;}
         }
         controller.signal.throwIfAborted();
         const layout=ocrLayout(result,doc.model.pages[n-1],prepared.viewport);
+        layout.contents=contents;
         const chars=doc.model.pages.reduce((sum,p)=>sum+(p.number===n ? 0 : (p.ocrLayout?.text.length ?? p.text.length)),0)+layout.text.length;
         if(chars>5000000) throw uiError('error.textLimit');
         doc.model.pages[n-1].ocrLayout=layout;
@@ -377,10 +390,44 @@ async function performOcr(doc, all = false) {
       }
       await tick();
     }
-  } catch(error) { doc.ocrWarning=controller.signal.aborted ? uiError('ocr.cancelled') : error?.i18nKey ? error : uiError('ocr.failed'); }
-  finally { engine?.close(); if(ocrAbort===controller) ocrAbort=null; }
+  } catch(error) { doc.ocrWarning=controller.signal.aborted ? uiError('ocr.cancelled') : error?.i18nKey ? error : uiError('ocr.failed'); if(selectedPages)throw doc.ocrWarning; }
+  finally { await engine?.close(); if(ocrAbort===controller) ocrAbort=null; }
   doc.model.detected=detectWithOcr(doc.model.pages,{sensitivity:doc.sensitivity});
   if(!doc.model.bookmarks.length) doc.model.entries=doc.model.detected;
+}
+async function runBookWork(kind,state) {
+  if(busy()||!current?.model)return;
+  const doc=current,pages=doc.model.pages;
+  const readPages=kind==='read'?parsePageRange(state.range,pages.length):null;
+  const bodyPages=kind==='calibrate'&&state.bodyRange.trim()?parsePageRange(state.bodyRange,pages.length):null;
+  scanning=true;cancelled=false;doc.status='loading';setControls();
+  async function ensure(numbers,contents=false){
+    if(cancelled)throw uiError('ocr.cancelled');
+    const missing=numbers.filter(n=>(!pages[n-1].ocrLayout||(contents&&!pages[n-1].ocrLayout.contents))&&(pages[n-1].text||'').replace(/\s/g,'').length<30);
+    if(missing.length)await performOcr(doc,false,missing,contents);
+    if(cancelled)throw uiError('ocr.cancelled');
+  }
+  try {
+    if(kind==='find'){
+      const candidates=Array.from({length:Math.min(pages.length,state.scanLimit)},(_,i)=>i+1);await ensure(candidates,true);
+      const found=candidates.filter(n=>isContentsPage(pages[n-1],state.columns));
+      if(found.length)state.range=found.join(', ');
+      state.message=found.length?{key:'book.found',pages:found.join(', ')}:{key:'book.notFound'};
+    }else if(kind==='read'){
+      await ensure(readPages,true);
+      const rows=parseContents(readPages.map(n=>pages[n-1]),{columns:state.columns});
+      if(!rows.length)throw uiError('book.empty');
+      state.tocPages=readPages;state.rows=rows;state.anchors=[];state.message={key:'book.readDone',count:rows.length};
+    }else{
+      await ensure(bodyPages||calibrationSample(pages.length,state.tocPages));
+      let rows=calibrate(state.rows,pages,state.tocPages,state.anchors);
+      if(!bodyPages){
+        const targets=[...new Set(rows.filter(r=>!r.verified&&r.pdfPage).flatMap(r=>[r.pdfPage,r.pdfPage-1,r.pdfPage+1]))].filter(n=>n>0&&n<=pages.length&&!state.tocPages.includes(n)).slice(0,40);
+        await ensure(targets);rows=calibrate(rows,pages,state.tocPages,state.anchors);
+      }
+      state.rows=rows;state.message={key:'book.calibrated'};
+    }
+  } finally {doc.status='ready';scanning=false;if(current===doc)selectDocument(doc);else renderQueue();setControls();}
 }
 async function runOcr(all = $('ocr-range').value === 'all') {
   if(busy() || !current?.model) return;
@@ -574,6 +621,7 @@ document.querySelector('.brand').onclick = event => { event.preventDefault(); if
 window.addEventListener('resize', () => requestRender());
 window.addEventListener('beforeunload', event => { if (records.some(doc => doc.dirty || doc.ocrChanged)) { event.preventDefault(); event.returnValue = ''; } });
 $('searchable').onchange=()=>{setControls();refreshStatus();};
+$('ocr-engine').onchange=()=>host.ocrEngine($('ocr-engine').value);
 function refreshLanguage() {
   const scroll = $('outline-list').scrollTop;
   translateDom(document);

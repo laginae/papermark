@@ -1,6 +1,6 @@
 {
   "name": "paper-pdf-bookmarker",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Local-first paper PDF bookmark editor, packaged as one offline HTML file.",
   "license": "MIT",

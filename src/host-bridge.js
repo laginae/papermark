@@ -44,6 +44,7 @@ function createHostBridge({onInit,onFiles}={}) {
     const buffer=await new Blob([bytes]).arrayBuffer();return request('save',{bytes:buffer,name,type});
   };
   bridge.language=value=>{if(session)send({type:'language',value});};
+  bridge.ocrEngine=value=>{if(session&&bridge.desktop)send({type:'ocr-engine',value});};
   bridge.request=request;
   if(window.parent!==window)send({type:'hello'});
   return bridge;

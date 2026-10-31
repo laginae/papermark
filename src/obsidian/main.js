@@ -4,8 +4,8 @@ import {CHANNEL} from '../host-bridge';
 import {label} from './strings';
 import {PickFilesModal,SaveFileModal,readFiles} from './modals';
 import {folderPath,supports,outputName} from './files';
+import {defaults,localOcrEngine} from './preferences';
 const VIEW='papermark-workspace';
-const defaults={language:'en',exportFolder:'PaperMark',paddleExecutable:''};
 class PaperMarkView extends ItemView {
   constructor(leaf,plugin){super(leaf);this.plugin=plugin;this.jobs=new Map();this.deliveries=new Map();this.session=crypto.randomUUID();this.ready=new Promise(resolve=>this.resolveReady=resolve);}
   getViewType(){return VIEW;}
@@ -21,9 +21,10 @@ class PaperMarkView extends ItemView {
   async message(event){
     const data=event.data;
     if(this.closed||event.source!==this.frame?.contentWindow||data?.channel!==CHANNEL)return;
-    if(data.type==='hello'){this.send({type:'init',language:this.plugin.settings.language,desktop:Platform.isDesktopApp});this.resolveReady(true);return;}
+    if(data.type==='hello'){this.send({type:'init',language:this.plugin.settings.language,desktop:Platform.isDesktopApp,ocrEngine:localOcrEngine(this.plugin.settings.ocrEngine,Platform.isDesktopApp)});this.resolveReady(true);return;}
     if(data.session!==this.session)return;
     if(data.type==='language'){this.plugin.settings.language=data.value==='zh-CN'?'zh-CN':'en';await this.plugin.saveSettings();return;}
+    if(data.type==='ocr-engine'){this.plugin.settings.ocrEngine=localOcrEngine(data.value,Platform.isDesktopApp);await this.plugin.saveSettings();return;}
     if(data.type==='files-done'){this.deliveries.get(data.id)?.(data.error);return;}
     if(data.type==='cancel'){const job=this.jobs.get(data.id);job?.controller.abort();job?.modal?.close();return;}
     if(data.type!=='request'||typeof data.id!=='string'||data.id.length>40||this.jobs.has(data.id)||this.jobs.size>8)return;
@@ -81,7 +82,10 @@ class PaperMarkSettings extends PluginSettingTab {
     const {containerEl}=this,plugin=this.plugin,tr=key=>label(plugin.settings.language,key);containerEl.empty();containerEl.createEl('h2',{text:tr('settings')});containerEl.createEl('p',{text:tr('privacy')});
     new Setting(containerEl).setName(tr('language')).addDropdown(drop=>drop.addOption('en','English').addOption('zh-CN','中文').setValue(plugin.settings.language).onChange(async value=>{plugin.settings.language=value;await plugin.saveSettings();this.display();}));
     new Setting(containerEl).setName(tr('destination')).setDesc(tr('destinationHelp')).addText(text=>text.setValue(plugin.settings.exportFolder).onChange(async value=>{try{plugin.settings.exportFolder=folderPath(value);await plugin.saveSettings();}catch{}}));
-    if(Platform.isDesktopApp)new Setting(containerEl).setName(tr('helper')).setDesc(tr('helperHelp')).addText(text=>text.setPlaceholder('CozyOcr executable').setValue(plugin.settings.paddleExecutable).onChange(async value=>{plugin.settings.paddleExecutable=value.trim();await plugin.saveSettings();}));
+    if(Platform.isDesktopApp){
+      new Setting(containerEl).setName(tr('helper')).setDesc(tr('helperHelp')).addText(text=>text.setPlaceholder('CozyOcr executable').setValue(plugin.settings.paddleExecutable).onChange(async value=>{plugin.settings.paddleExecutable=value.trim();await plugin.saveSettings();}));
+      new Setting(containerEl).setName(tr('engine')).setDesc(tr('engineHelp')).addDropdown(drop=>drop.addOption('builtin',tr('builtin')).addOption('small','Paddle Small').addOption('tiny','Paddle Tiny').setValue(plugin.settings.ocrEngine).onChange(async value=>{plugin.settings.ocrEngine=localOcrEngine(value);await plugin.saveSettings();}));
+    }
     containerEl.createEl('a',{text:tr('guide'),href:'https://github.com/laginae/papermark/blob/main/docs/obsidian.md'});containerEl.createEl('p',{text:tr('close')});
   }
 }
@@ -91,6 +95,7 @@ export default class PaperMarkPlugin extends Plugin {
     if(saved?.language==='zh-CN')this.settings.language='zh-CN';
     try{if(typeof saved?.exportFolder==='string')this.settings.exportFolder=folderPath(saved.exportFolder);}catch{}
     if(typeof saved?.paddleExecutable==='string')this.settings.paddleExecutable=saved.paddleExecutable;
+    this.settings.ocrEngine=localOcrEngine(saved?.ocrEngine);
     this.registerView(VIEW,leaf=>new PaperMarkView(leaf,this));this.addRibbonIcon('book-open-check','PaperMark',()=>this.open());
     this.addCommand({id:'open-papermark',name:'Open PaperMark',callback:()=>this.open()});this.addSettingTab(new PaperMarkSettings(this.app,this));
     this.registerEvent(this.app.workspace.on('file-menu',(menu,file)=>{if(file instanceof TFile)this.addMenu(menu,[file]);}));

@@ -6,7 +6,7 @@ const {normalizeCjkText}=require('./ocr-pdf-spacing');
 // the original PDF space, including its crop box and /Rotate value.
 function ocrLayout(data, original, viewport) {
   const scale = viewport.scale, width = viewport.width / scale, height = viewport.height / scale;
-  const lines = [], items = []; let text = '';
+  const lines = [], items = [], fragments = []; let text = '';
   for (const block of data.blocks || []) for (const paragraph of block.paragraphs || []) for (const line of paragraph.lines || []) {
     const value = normalizeCjkText((line.text || '').trim().normalize('NFKC'));
     const box = line.bbox;
@@ -15,10 +15,13 @@ function ocrLayout(data, original, viewport) {
     const size = glyphs[Math.floor(glyphs.length*.7)] || (box.y1-box.y0) / scale, x = box.x0 / scale, y = height-box.y1/scale;
     const offset = text.length; text += value+'\n';
     lines.push({text:value,offset,xMin:x,xMax:box.x1/scale,y,height:size,confidence:line.confidence??data.confidence??0});
+    const words=(line.words||[]).filter(w=>w.text?.trim()&&w.bbox&&w.bbox.x1>w.bbox.x0&&w.bbox.y1>w.bbox.y0);
+    for(const word of words)fragments.push({text:word.text,xMin:word.bbox.x0/scale,xMax:word.bbox.x1/scale,y:height-word.bbox.y1/scale,height:(word.bbox.y1-word.bbox.y0)/scale,confidence:word.confidence??line.confidence??data.confidence??0});
+    if(!words.length)fragments.push(lines.at(-1));
     items.push({str:value,width:(box.x1-box.x0)/scale,height:size,fontName:'OCR',transform:[size,0,0,size,x,y]});
   }
   const heights = items.map(i=>i.height).sort((a,b)=>a-b);
-  return { number:original.number, text, lines, items, styles:{}, width, height, view:[0,0,width,height],
+  return { number:original.number, text, lines, fragments, items, styles:{}, width, height, view:[0,0,width,height],
     bodyHeight:heights[Math.floor(heights.length/2)] || 10, ocr:true,
     transform:[...viewport.transform], scale, confidence:data.confidence || 0 };
 }

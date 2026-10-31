@@ -46,6 +46,10 @@ Pages with at least 30 non-whitespace characters already extracted are skipped f
 
 Local OCR uses higher-resolution images, contrast adjustment and correction of small tilts (up to about four degrees), without altering the original PDF. It is intended for legible printed text. Blurry, skewed, complex or handwritten pages may be misread; check important quotations against the image. Selection follows approximate OCR bounds, and columns or tables may copy in a different reading order. Large files and mobile devices can be slow.
 
+## Scanned books with printed contents
+
+Choose **Book contents pages** in local mode, enter the PDF pages containing the printed contents, then **Read contents → Auto-calibrate pages → Review and apply**. The separate draft supports single/two-column layouts, hierarchy editing, Roman front matter, chapter-local page numbers and manual page anchors. Existing bookmarks are kept by default. Only completed OCR pages gain searchable text; run All pages OCR for the entire book. See the [book contents guide](docs/book-contents.md) for the sampling limits and review steps.
+
 ## Optional MinerU high precision
 
 After adding a PDF, select **MinerU online recognition** to follow three steps: **Connect helper → Enter Token → Confirm upload**. Every user enters their own API Token; it is never embedded in the app or saved. On Windows 10/11 x64, download [the helper ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip), extract it and double-click `PaperMark-MinerU.exe` — no Node.js installation or commands. Its control page provides a connection code and a Stop button. The guide is available in English and Chinese. The script helper remains available for other desktop systems with Node.js.

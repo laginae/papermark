@@ -6,6 +6,12 @@ const {validateResult}=require('../src/obsidian/native/ocr-contract');
 const {OcrProcess}=require('../src/obsidian/native/ocr-process');
 const {EventEmitter}=require('node:events');const {PassThrough}=require('node:stream');
 const {createHostBridge,CHANNEL}=require('../src/host-bridge');
+const {defaults,localOcrEngine}=require('../src/obsidian/preferences');
+test('local engine preferences retain explicit choices and fall back to built-in on mobile',()=>{
+  assert.equal(defaults.ocrEngine,'builtin');
+  for(const value of ['small','tiny']){assert.equal(localOcrEngine(value),value);assert.equal(localOcrEngine(value,false),'builtin');}
+  for(const value of ['online','mineru','',null,undefined])assert.equal(localOcrEngine(value),'builtin');
+});
 test('workspace bridge ignores other frames and stale sessions; cancellation settles pending calls',async()=>{
   const before=global.window,sent=[];let listener,initialized=0;const parent={postMessage:data=>sent.push(data)};
   global.window={parent,addEventListener:(type,fn)=>{if(type==='message')listener=fn;},dispatchEvent:()=>{}};
@@ -13,6 +19,7 @@ test('workspace bridge ignores other frames and stale sessions; cancellation set
     const bridge=createHostBridge({onInit:()=>initialized++});
     await listener({source:{},data:{channel:CHANNEL,type:'init',session:'wrong'}});assert.equal(bridge.connected,false);
     await listener({source:parent,data:{channel:CHANNEL,type:'init',session:'session',desktop:true}});assert.equal(initialized,1);assert.equal(bridge.desktop,true);
+    bridge.ocrEngine('small');assert.deepEqual(sent.at(-1),{channel:CHANNEL,session:'session',type:'ocr-engine',value:'small'});
     const pending=bridge.request('pick',{kind:'pdf'});const id=sent.at(-1).id;let resolved=false;pending.then(()=>resolved=true);
     await listener({source:parent,data:{channel:CHANNEL,type:'result',session:'wrong',id,value:[]}});await Promise.resolve();assert.equal(resolved,false);
     await listener({source:parent,data:{channel:CHANNEL,type:'result',session:'session',id,value:[]}});assert.deepEqual(await pending,[]);
