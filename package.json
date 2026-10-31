@@ -1,11 +1,12 @@
 {
   "name": "paper-pdf-bookmarker",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "description": "Local-first paper PDF bookmark editor, packaged as one offline HTML file.",
   "license": "MIT",
   "scripts": {
     "build": "node scripts/build.cjs",
+    "lint:obsidian": "node scripts/lint-obsidian.cjs",
     "package:helper": "node scripts/package-helper.cjs",
     "test": "node --test tests/*.test.cjs",
     "fixtures": "node scripts/fixtures.cjs",
@@ -23,6 +24,8 @@
   },
   "devDependencies": {
     "esbuild": "0.28.2",
+    "eslint": "9.39.5",
+    "eslint-plugin-obsidianmd": "0.4.2",
     "jsdom": "26.1.0",
     "postject": "1.0.0-alpha.6"
   },

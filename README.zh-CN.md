@@ -4,6 +4,14 @@
 
 为论文 PDF 添加可以跳转的书签目录。自动识别章节标题，核对和编辑后导出新的 PDF。默认模式在浏览器本机处理，支持离线使用；可选 MinerU 模式需要另行确认上传。
 
+## Obsidian 插件
+
+PaperMark 支持 Windows、macOS、Linux 的 **Obsidian 桌面端**。从[发行版](https://github.com/laginae/papermark/releases/tag/0.9.1)下载 **PaperMark-0.9.1-obsidian.zip**，按[安装说明](docs/obsidian.zh-CN.md)操作。尚未确认通过社区目录审核。内置 OCR 免费且随插件打包，不需要账号、Node.js 或首次联网下载。Paddle Small/Tiny 是可选的 Windows x64 引擎。
+
+本地模式不发出与文档有关的网络请求。由你选择库内或设备文件，并将输出另存为新文件。可选 Paddle OCR 会执行你在设置中指定的 Cozy OCR 程序，该程序及其相邻模型、运行库可能位于笔记库之外；页面像素通过本机进程管道传递。插件不会自动下载或更新助手。
+
+可选 **MinerU** 需要独立的 MinerU 账号、自己的 Token 和运行中的本机连接助手。逐份确认上传后，助手会将整份 PDF 发送给 MinerU 并取回结果；额度和费用以 MinerU 为准，可能需要付费 API 套餐。PaperMark 本身不收费。主动选择设备文件或浏览器下载时，也可能在笔记库之外读取或保存文件。插件设置只保存偏好和可选程序路径，不保存 Token 或文档内容。
+
 ## 在线使用或下载
 
 **[直接在浏览器打开 PaperMark](https://laginae.github.io/papermark/)**，无需下载或安装。
@@ -85,6 +93,7 @@ OCR 生成的书签均标记为建议核对，请检查标题和跳转位置后�
 
 ```sh
 npm ci
+npm run lint:obsidian
 npm run fixtures
 npm test
 npm run build

@@ -6,10 +6,10 @@
 
 ## 安装
 
-1. 从 [0.9.0 发布页](https://github.com/laginae/papermark/releases/tag/v0.9.0)下载 **PaperMark-0.9.0-obsidian.zip**。
+1. 从 [0.9.1 发布页](https://github.com/laginae/papermark/releases/tag/0.9.1)下载 **PaperMark-0.9.1-obsidian.zip**。
 2. 解压后，把 `papermark` 文件夹放进笔记库的 `.obsidian/plugins/` 下。文件夹内应直接包含 `main.js`、`manifest.json` 和 `styles.css`，不要再多套一层目录。
 3. 重启 Obsidian 或重新加载插件，在“设置 → 第三方插件”中启用 **PaperMark**。
-4. 点击侧栏的 PaperMark 图标，或在命令面板运行 **PaperMark: Open PaperMark**。
+4. 点击侧栏的 PaperMark 图标，或在命令面板运行 **PaperMark: Open workspace**。
 
 这是手动安装版，尚未提交或通过 Obsidian 社区插件目录审核。无需安装 Node.js。插件已包含 PDF 引擎、内置 OCR 及中英文识别数据，首次使用也无需下载模型。
 
@@ -40,7 +40,7 @@ Windows x64 配置方法：
 
 助手仅在运行 Paddle OCR 时启动，通过本机进程管道接收像素，不上传 PDF、不需要 Token，也不开放网络服务。任务完成、取消或关闭工作区后会停止。使用时需要额外数百 MB 内存；插件设置保存助手路径和首选 OCR 引擎，不保存识别内容。
 
-此助手与 **MinerU 连接助手** 不同。Windows 助手不能在 macOS/Linux 运行，其他平台的原生助手尚待验证，目前请使用内置 OCR。移动端不能运行 Paddle 助手。
+此助手与 **MinerU 连接助手** 不同。Windows 助手不能在 macOS/Linux 运行，其他平台的原生助手尚待验证，目前请使用内置 OCR。插件包含桌面端原生 OCR 适配接口，因此仅支持 Obsidian 桌面端；其他设备仍可使用独立网页版。
 
 ## 隐私和兼容范围
 
@@ -50,7 +50,7 @@ Windows x64 配置方法：
 - 插件设置保存界面语言、导出文件夹、首选 OCR 引擎和可选助手路径，不保存 Token、文档或识别结果。
 - 关闭或重新加载工作区会丢失未保存的文件和修改，请先导出 PDF 或目录 JSON。在工作区切换语言不会丢失编辑；设置页中的修改在重新打开工作区后应用。
 - PDF 限制：最多 20 份，单份 100 MB、2,000 页，总计 250 MB。图片限制：最多 100 张，单张 20 MB、2500 万像素，总计 200 MB。大批量扫描件可能很慢或超出设备内存。
-- 本版在 Windows x64、Obsidian 1.14.4 及 Chrome 中验证。核心使用跨平台库文件接口；macOS、Linux 和移动端尚未进行真机测试。声明的最低 Obsidian 版本为 1.8.7，移动端建议少量分批处理。
+- 本版在 Windows x64、Obsidian 1.14.4 及 Chrome 中验证。核心使用跨平台库文件接口；macOS、Linux 尚未进行真机测试。声明的最低 Obsidian 版本为 1.8.7。
 
 ## 构建
 

@@ -6,10 +6,10 @@ PaperMark opens a PDF workspace inside Obsidian. It merges images into PDFs, add
 
 ## Install
 
-1. Download **PaperMark-0.9.0-obsidian.zip** from the [0.9.0 release](https://github.com/laginae/papermark/releases/tag/v0.9.0).
+1. Download **PaperMark-0.9.1-obsidian.zip** from the [0.9.1 release](https://github.com/laginae/papermark/releases/tag/0.9.1).
 2. Extract the `papermark` folder into your vault's `.obsidian/plugins/` folder. It must contain `main.js`, `manifest.json` and `styles.css` directly, without an extra nested folder.
 3. Restart Obsidian or reload its plugins, then enable **PaperMark** under **Settings → Community plugins**.
-4. Click the PaperMark ribbon icon or run **PaperMark: Open PaperMark** from the command palette.
+4. Click the PaperMark ribbon icon or run **PaperMark: Open workspace** from the command palette.
 
 This is a manually installed plugin release, not an approved Obsidian community-directory entry. No Node.js installation is needed. PDF rendering, built-in OCR and English/Chinese recognition data are bundled in the plugin; they do not download on first use.
 
@@ -40,7 +40,7 @@ For Windows x64:
 
 The helper starts only for a Paddle OCR task. Pixels pass through local process pipes; no PDF upload, API Token or listening network service is needed. It is stopped after recognition, cancellation or workspace closure. Allow several hundred MB of additional memory. The settings store the executable path and preferred OCR engine; documents and recognized text are not saved in plugin settings.
 
-The helper is optional and separate from the **MinerU helper**. The Windows helper does not run on macOS/Linux. Native helper builds for those systems require separate validation; use built-in OCR there for now. Mobile cannot launch the Paddle helper.
+The helper is optional and separate from the **MinerU helper**. The Windows helper does not run on macOS/Linux. Native helper builds for those systems require separate validation; use built-in OCR there for now. The Obsidian plugin is desktop-only because its native OCR adapter uses desktop APIs. The standalone browser edition remains available on other devices.
 
 ## Privacy and compatibility
 
@@ -50,7 +50,7 @@ The helper is optional and separate from the **MinerU helper**. The Windows help
 - Language, export-folder and OCR-engine preferences, and the optional helper executable path, are saved in Obsidian's plugin settings. Tokens and document contents are not.
 - Closing/reloading the workspace discards unsaved files and edits. Export your PDF or outline JSON first. Changing the language in the workspace preserves edits; settings changes apply when a workspace is reopened.
 - PDF limits: 20 files, 100 MB per file, 250 MB total and 2,000 pages per PDF. Images: 100 files, 20 MB and 25 megapixels per image, 200 MB total. Large scans may be slow or exceed available memory.
-- Verified on Windows x64 with Obsidian 1.14.4 and in Chrome. The core uses Obsidian's portable vault APIs; macOS, Linux and mobile have not been device-tested for this release. Minimum declared Obsidian version: 1.8.7. Use smaller batches on mobile.
+- Verified on Windows x64 with Obsidian 1.14.4 and in Chrome. The core uses Obsidian's portable vault APIs; macOS and Linux have not been device-tested for this release. Minimum declared Obsidian version: 1.8.7.
 
 ## Build
 

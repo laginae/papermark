@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.1
+
+- Prepare community-directory distribution with a release tag matching the manifest version exactly and explicit desktop compatibility for the native OCR adapter.
+- Keep workspace leaf positions when disabling the plugin while disposing OCR jobs, modal dialogs and embedded documents. Remove the redundant settings heading.
+- Use the command ID `open` and label `Open workspace`; users with a shortcut for the former `open-papermark` command should assign it again.
+- Keep the Obsidian wrapper readable and document optional external-program access, MinerU account requirements and third-party charges in both READMEs.
+
 ## 0.9.0
 
 - Add a local scanned-book contents workflow: find or select contents pages, reconstruct single/two-column rows, infer numbering/indentation hierarchy, then review a separate editable draft.

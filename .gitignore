@@ -1,4 +1,6 @@
 node_modules/
+/main.js
+/styles.css
 qa/
 release/
 _site/

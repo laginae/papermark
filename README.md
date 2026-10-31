@@ -4,6 +4,14 @@
 
 Give research papers a clickable outline. PaperMark detects section headings in PDFs, lets you review and edit the bookmarks, and exports a new PDF. The default mode runs locally in your browser, including without an internet connection. Optional MinerU processing requires a separate upload confirmation.
 
+## Obsidian plugin
+
+PaperMark runs inside **desktop Obsidian** on Windows, macOS and Linux. Download **PaperMark-0.9.1-obsidian.zip** from the [release](https://github.com/laginae/papermark/releases/tag/0.9.1) and follow the [installation guide](docs/obsidian.md). Community-directory approval is not yet confirmed. Built-in OCR is bundled and free; it needs no account, installation of Node.js, or first-run download. Paddle Small/Tiny is an optional Windows x64 engine.
+
+Local mode makes no document-related network requests. You choose which vault or device files to open and where to save new outputs. Optional Paddle OCR executes the user-configured Cozy OCR program, which may be outside the vault, and reads its adjacent models/runtime files. It receives page pixels through local process pipes. The plugin does not automatically download or update that helper.
+
+Optional **MinerU** needs a separate MinerU account, your own Token and a locally running connection helper. After per-document upload consent, that helper sends the entire selected PDF to MinerU and retrieves the result. MinerU's own quotas and pricing apply; a paid API plan may be needed. PaperMark charges no fee. Imported/exported files can also be outside the vault when you explicitly choose a device file or browser download. Plugin settings save preferences and the optional executable path, never Tokens or document contents.
+
 ## Open online or download
 
 **[Open PaperMark in your browser](https://laginae.github.io/papermark/)** — no download or installation required.
@@ -83,6 +91,7 @@ Use Node.js 22.13 or later and npm:
 
 ```sh
 npm ci
+npm run lint:obsidian
 npm run fixtures
 npm test
 npm run build

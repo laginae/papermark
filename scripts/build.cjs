@@ -59,12 +59,14 @@ const escapeHtml = text => text.replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
   fs.writeFileSync(path.join(root,'dist/PaperMark.html'), html, 'utf8');
   fs.writeFileSync(path.join(root,'dist/index.html'), web, 'utf8');
   const pluginDir=path.join(root,'dist/obsidian');fs.mkdirSync(pluginDir,{recursive:true});
-  await esbuild.build({entryPoints:[path.join(root,'src/obsidian/main.js')],bundle:true,platform:'browser',format:'cjs',target:'es2022',minify:true,legalComments:'inline',
+  await esbuild.build({entryPoints:[path.join(root,'src/obsidian/main.js')],bundle:true,platform:'browser',format:'cjs',target:'es2022',minify:false,legalComments:'inline',
     external:['obsidian','node:child_process','node:path','process'],outfile:path.join(pluginDir,'main.js'),
     plugins:[{name:'offline-workspace',setup(build){build.onResolve({filter:/^papermark-offline-html$/},()=>({path:'html',namespace:'offline'}));build.onLoad({filter:/.*/,namespace:'offline'},()=>({contents:html,loader:'text'}));}}]});
   const pluginManifest=JSON.parse(read('manifest.json'));if(pluginManifest.version!==pkg.version)throw Error('Plugin version mismatch');
   fs.copyFileSync(path.join(root,'manifest.json'),path.join(pluginDir,'manifest.json'));
   fs.copyFileSync(path.join(root,'src/obsidian/styles.css'),path.join(pluginDir,'styles.css'));
+  // Standard Obsidian build locations, also used by community build verification.
+  for(const name of ['main.js','styles.css'])fs.copyFileSync(path.join(pluginDir,name),path.join(root,name));
   await esbuild.build({entryPoints:[path.join(root,'scripts/mineru-helper.cjs')],bundle:true,platform:'node',format:'cjs',target:'node22',minify:true,legalComments:'inline',outfile:path.join(root,'dist/PaperMark-MinerU-helper.cjs')});
   const helper=fs.readFileSync(path.join(root,'dist/PaperMark-MinerU-helper.cjs'));
   const manifest = { app: 'PaperMark', version: pkg.version, bytes: Buffer.byteLength(html),

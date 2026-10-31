@@ -65,12 +65,16 @@ class PaperMarkView extends ItemView {
     job.modal=modal;modal.open();
   }
   async addFiles(files){
-    const ready=await Promise.race([this.ready,new Promise(resolve=>setTimeout(()=>resolve(false),30000))]);if(!ready||this.closed)throw new Error('host.failed');
+    const win=this.contentEl.ownerDocument.defaultView;
+    let readyTimer;
+    const ready=await Promise.race([this.ready,new Promise(resolve=>{readyTimer=win.setTimeout(()=>resolve(false),30000);})]);win.clearTimeout(readyTimer);if(!ready||this.closed)throw new Error('host.failed');
     const kind=files.every(f=>supports(f,'images'))?'images':'pdf',prepared=await readFiles(this.app.vault,files,kind),id=crypto.randomUUID();
-    return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{this.deliveries.delete(id);reject(new Error('host.failed'));},180000);
-      this.deliveries.set(id,error=>{clearTimeout(timer);this.deliveries.delete(id);error?reject(new Error('host.busy')):resolve();});this.send({type:'files',id,files:prepared});});
+    return new Promise((resolve,reject)=>{const timer=win.setTimeout(()=>{this.deliveries.delete(id);reject(new Error('host.failed'));},180000);
+      this.deliveries.set(id,error=>{win.clearTimeout(timer);this.deliveries.delete(id);error?reject(new Error('host.busy')):resolve();});this.send({type:'files',id,files:prepared});});
   }
-  async onClose(){
+  async onClose(){this.dispose();}
+  dispose(){
+    if(this.closed)return;
     this.send({type:'dispose'});this.closed=true;this.resolveReady(false);this.ocr?.close();this.ocr=null;
     for(const job of this.jobs.values()){job.controller.abort();job.modal?.close();}this.jobs.clear();
     for(const done of [...this.deliveries.values()])done(true);this.frame?.remove();this.contentEl.empty();
@@ -79,7 +83,7 @@ class PaperMarkView extends ItemView {
 class PaperMarkSettings extends PluginSettingTab {
   constructor(app,plugin){super(app,plugin);this.plugin=plugin;}
   display(){
-    const {containerEl}=this,plugin=this.plugin,tr=key=>label(plugin.settings.language,key);containerEl.empty();containerEl.createEl('h2',{text:tr('settings')});containerEl.createEl('p',{text:tr('privacy')});
+    const {containerEl}=this,plugin=this.plugin,tr=key=>label(plugin.settings.language,key);containerEl.empty();containerEl.createEl('p',{text:tr('privacy')});
     new Setting(containerEl).setName(tr('language')).addDropdown(drop=>drop.addOption('en','English').addOption('zh-CN','中文').setValue(plugin.settings.language).onChange(async value=>{plugin.settings.language=value;await plugin.saveSettings();this.display();}));
     new Setting(containerEl).setName(tr('destination')).setDesc(tr('destinationHelp')).addText(text=>text.setValue(plugin.settings.exportFolder).onChange(async value=>{try{plugin.settings.exportFolder=folderPath(value);await plugin.saveSettings();}catch{}}));
     if(Platform.isDesktopApp){
@@ -97,7 +101,7 @@ export default class PaperMarkPlugin extends Plugin {
     if(typeof saved?.paddleExecutable==='string')this.settings.paddleExecutable=saved.paddleExecutable;
     this.settings.ocrEngine=localOcrEngine(saved?.ocrEngine);
     this.registerView(VIEW,leaf=>new PaperMarkView(leaf,this));this.addRibbonIcon('book-open-check','PaperMark',()=>this.open());
-    this.addCommand({id:'open-papermark',name:'Open PaperMark',callback:()=>this.open()});this.addSettingTab(new PaperMarkSettings(this.app,this));
+    this.addCommand({id:'open',name:'Open workspace',callback:()=>this.open()});this.addSettingTab(new PaperMarkSettings(this.app,this));
     this.registerEvent(this.app.workspace.on('file-menu',(menu,file)=>{if(file instanceof TFile)this.addMenu(menu,[file]);}));
     this.registerEvent(this.app.workspace.on('files-menu',(menu,files)=>this.addMenu(menu,files)));
   }
@@ -110,5 +114,10 @@ export default class PaperMarkPlugin extends Plugin {
     try{let leaf=this.app.workspace.getLeavesOfType(VIEW).find(item=>!item.view.closed);if(!leaf){leaf=this.app.workspace.getLeaf('tab');await leaf.setViewState({type:VIEW,active:true});}await this.app.workspace.revealLeaf(leaf);if(files?.length)await leaf.view.addFiles(files);}
     catch(error){new Notice(label(this.settings.language,error.message==='host.busy'?'busy':'failed'));}
   }
-  onunload(){this.app.workspace.detachLeavesOfType(VIEW);}
+  onunload(){
+    // Keep leaf positions for Obsidian to restore when the plugin is enabled again.
+    for(const leaf of this.app.workspace.getLeavesOfType(VIEW)){
+      if(leaf.view instanceof PaperMarkView)leaf.view.dispose();
+    }
+  }
 }
