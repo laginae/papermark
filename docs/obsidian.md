@@ -2,6 +2,8 @@
 
 [简体中文](obsidian.zh-CN.md)
 
+**PDF OCR & Bookmarks** · Maintained by [laginae](https://github.com/laginae)
+
 PaperMark opens a PDF workspace inside Obsidian. It merges images into PDFs, adds searchable local OCR text, and detects and edits bookmarks. The interface starts in English and can be switched to Chinese. The original files are kept.
 
 ## Install
@@ -10,7 +12,7 @@ Open the [community listing](https://community.obsidian.md/plugins/papermark) an
 
 For manual installation:
 
-1. Download **PaperMark-0.9.2-obsidian.zip** from the [0.9.2 release](https://github.com/laginae/papermark/releases/tag/0.9.2).
+1. Download **PaperMark-0.9.3-obsidian.zip** from the [0.9.3 release](https://github.com/laginae/papermark/releases/tag/0.9.3).
 2. Extract the `papermark` folder into your vault's `.obsidian/plugins/` folder. It must contain `main.js`, `manifest.json` and `styles.css` directly, without an extra nested folder.
 3. Restart Obsidian or reload its plugins, then enable **PaperMark** under **Settings → Community plugins**.
 4. Click the PaperMark ribbon icon or run **PaperMark: Open workspace** from the command palette.

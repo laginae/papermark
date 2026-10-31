@@ -1,10 +1,10 @@
 {
   "id": "papermark",
   "name": "PaperMark",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "minAppVersion": "1.8.7",
-  "description": "Merge images into PDFs, add searchable local OCR text, and create and edit bookmarks from paper headings or scanned book contents.",
-  "author": "PaperMark contributors",
+  "description": "Merge images into PDFs, add searchable OCR text, and create editable bookmarks from papers or scanned books. Local processing by default.",
+  "author": "laginae",
   "authorUrl": "https://github.com/laginae",
   "isDesktopOnly": true
 }

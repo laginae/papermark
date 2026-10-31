@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.3
+
+- Use laginae as the public maintainer name and add the PDF OCR & Bookmarks subtitle, with Chinese equivalents. Keep the PaperMark name and plugin ID.
+- Update the bilingual introduction to cover image merging, searchable/copyable OCR text, paper headings, scanned book contents and editable bookmarks.
+- State local processing as the default and clearly describe optional whole-PDF uploads to MinerU after per-document consent, using the user's own Token.
+- Preserve existing OCR, bookmark, export and upload-confirmation behavior.
+
 ## 0.9.2
 
 - Link the author profile as requested by community review.

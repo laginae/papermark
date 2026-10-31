@@ -2,7 +2,11 @@
 
 [简体中文](README.zh-CN.md)
 
-Give research papers a clickable outline. PaperMark detects section headings in PDFs, lets you review and edit the bookmarks, and exports a new PDF. The default mode runs locally in desktop Obsidian or your browser, including without an internet connection. Optional MinerU processing requires a separate upload confirmation.
+**PDF OCR & Bookmarks** · Maintained by [laginae](https://github.com/laginae)
+
+Merge images into PDFs, add searchable and copyable text to scanned pages, and automatically create and edit PDF bookmarks. PaperMark reads paper headings and scanned book contents, helps calibrate printed page numbers, and lets you review the result before exporting a new copy with the original pages preserved. The interface supports English and Chinese.
+
+**Local processing is the default.** Built-in OCR works on your device without uploading documents. Optional **MinerU** processing uses your own Token and a local connection helper; the entire selected PDF is uploaded to MinerU only after explicit confirmation for that document. The local features are free; MinerU quotas and charges may apply.
 
 ## Obsidian plugin
 
