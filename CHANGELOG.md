@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.4
+
+- Keep PDF export within reach with a sticky bottom action bar; retain the original top export button.
+- Show a full-width bottom button in narrow windows, with a reminder that export saves a new copy.
+- Share availability and exporting status between both buttons, including language changes and duplicate-click protection.
+- Make the manual local OCR action visually prominent and explain when it is unavailable.
+- Preserve local OCR, Paddle Small, bookmarks, searchable text and optional MinerU upload consent.
+
 ## 0.9.3
 
 - Use laginae as the public maintainer name and add the PDF OCR & Bookmarks subtitle, with Chinese equivalents. Keep the PaperMark name and plugin ID.

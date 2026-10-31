@@ -1,6 +1,14 @@
-# Verification for 0.7.1
+# Verification
 
 The release was checked with synthetic PDFs. No personal research papers are included in the repository or release archives.
+
+## Export controls in 0.9.4
+
+- All 69 automated tests and the Obsidian JavaScript guideline checks pass.
+- Browser checks on Windows cover the English and Chinese export labels, a sticky bottom action bar, and a full-width button at a 390-pixel viewport without horizontal document overflow. The original top export action remains available.
+- Both export buttons produce the same four-page, nine-bookmark test document. Independent PDF parsing and rendered-page comparisons confirm matching text, bookmark hierarchy, destinations and original page pixels.
+- A two-page synthetic Chinese scan is recognized through the manual local OCR button and exported from the bottom bar. The result has extractable text on both pages, four bookmarks, unchanged geometry and identical rendered page pixels. Both export buttons show the exporting state and remain disabled until completion.
+- OCR and export controls disable during recognition and recover afterward. The manual OCR action has a solid primary style and a translated explanation when unavailable. Recognition algorithms and MinerU upload consent are unchanged; no online OCR API is called for these checks.
 
 ## Startup and button checks in 0.7.1
 

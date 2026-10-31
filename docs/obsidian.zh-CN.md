@@ -12,7 +12,7 @@
 
 手动安装步骤：
 
-1. 从 [0.9.3 发布页](https://github.com/laginae/papermark/releases/tag/0.9.3)下载 **PaperMark-0.9.3-obsidian.zip**。
+1. 从 [0.9.4 发布页](https://github.com/laginae/papermark/releases/tag/0.9.4)下载 **PaperMark-0.9.4-obsidian.zip**。
 2. 解压后，把 `papermark` 文件夹放进笔记库的 `.obsidian/plugins/` 下。文件夹内应直接包含 `main.js`、`manifest.json` 和 `styles.css`，不要再多套一层目录。
 3. 重启 Obsidian 或重新加载插件，在“设置 → 第三方插件”中启用 **PaperMark**。
 4. 点击侧栏的 PaperMark 图标，或在命令面板运行 **PaperMark: Open workspace**。

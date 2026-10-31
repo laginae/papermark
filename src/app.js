@@ -133,7 +133,12 @@ function setControls() {
   recognition.update({doc:current, busy:busy()});
   book.update({doc:current,busy:busy()});
   $('ocr-run').disabled = !ready || busy();
-  $('export').disabled = !ready || !canExport(current) || busy();
+  $('ocr-run-hint').textContent = t(busy() ? 'ocr.runBusy' : !ready ? 'ocr.runWait' : 'ocr.runHelp');
+  for (const id of ['export', 'export-bottom']) {
+    $(id).disabled = !ready || !canExport(current) || busy();
+    $(id).textContent = t(exporting ? 'export.busy' : 'export');
+    $(id).setAttribute('aria-busy', String(exporting));
+  }
   $('export-all').disabled = busy() || !records.some(canExport);
   for (const id of ['rescan', 'add-bookmark', 'save-json', 'load-json', 'sensitivity']) $(id).disabled = !ready || busy();
   for (const id of ['entry-title', 'entry-level', 'entry-page', 'entry-position', 'move-up', 'move-down', 'delete', 'locate']) $(id).disabled = !entry() || busy();
@@ -562,7 +567,8 @@ document.addEventListener('dragenter', event => { if (event.dataTransfer?.types.
 document.addEventListener('dragover', event => { if (event.dataTransfer?.types.includes('Files')) event.preventDefault(); });
 document.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('drag-over'); } });
 document.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; document.body.classList.remove('drag-over'); if(!busy())acceptFiles(event.dataTransfer.files); });
-$('export').onclick = exportCurrent; $('export-all').onclick = exportAll;
+for (const id of ['export', 'export-bottom']) $(id).onclick = exportCurrent;
+$('export-all').onclick = exportAll;
 $('rescan').onclick = rescan; $('add-bookmark').onclick = addBookmark;
 $('ocr-run').onclick = () => runOcr();
 $('mineru-import').onclick=async()=>{try{if(host.connected)await importMineru((await host.pick('json'))[0]);else $('mineru-file').click();}catch(error){toast(friendlyError(error),true);}};

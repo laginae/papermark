@@ -34,6 +34,8 @@ PaperMark 支持 Windows、macOS、Linux 的 **Obsidian 桌面端**。从 [Obsid
 
 ![PaperMark 中文界面](docs/interface-zh-CN.png)
 
+核对完成后，可点击顶部或底部固定操作栏中的**导出 PDF**。两个入口均另存为新文件，保留原件；窄窗口下，底部按钮会铺满操作栏。
+
 ## 功能
 
 - Obsidian 工作区：选择库内文件并另存新文件，详见[插件安装说明](docs/obsidian.zh-CN.md)。

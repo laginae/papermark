@@ -34,6 +34,8 @@ On first open, wait for the **Loading PaperMark…** notice to disappear before 
 
 ![PaperMark English interface](docs/interface-en.png)
 
+Use **Export PDF** at the top or in the sticky bottom action bar after reviewing your document. Both buttons save the same new copy and leave the original unchanged. The bottom button expands to the available width in narrow windows.
+
 ## Features
 
 - Obsidian workspace with vault-file selection and non-overwriting exports; see the [plugin installation guide](docs/obsidian.md).

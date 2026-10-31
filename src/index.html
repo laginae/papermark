@@ -115,7 +115,8 @@
             <label><span data-i18n="ocr.engine"></span><select id="ocr-engine"><option value="builtin" data-i18n="ocr.builtin"></option><optgroup id="paddle-options" label="Paddle OCR" hidden><option value="small" data-i18n="ocr.paddleSmall"></option><option value="tiny" data-i18n="ocr.paddleTiny"></option></optgroup></select></label>
             <p class="flow-note" data-i18n="ocr.engineHelp"></p>
             <label><span data-i18n="ocr.language">OCR language</span><select id="ocr-language"><option value="eng+chi_sim" data-i18n="ocr.both"></option><option value="eng" data-i18n="ocr.english"></option><option value="chi_sim" data-i18n="ocr.chinese"></option></select></label>
-            <label><span data-i18n="ocr.range">Manual OCR</span><select id="ocr-range"><option value="scans" data-i18n="ocr.scans"></option><option value="all" data-i18n="ocr.all"></option></select></label><button id="ocr-run" class="outline-button" data-i18n="ocr.run" disabled></button>
+            <label><span data-i18n="ocr.range">Manual OCR</span><select id="ocr-range"><option value="scans" data-i18n="ocr.scans"></option><option value="all" data-i18n="ocr.all"></option></select></label><button id="ocr-run" class="primary" data-i18n="ocr.run" aria-describedby="ocr-run-hint" disabled></button>
+            <p id="ocr-run-hint" class="flow-note"></p>
             <label class="check-label"><input id="auto-ocr" type="checkbox"><span data-i18n="flow.autoLater">Auto OCR PDFs added next</span></label>
             <p class="flow-note" data-i18n="ocr.privacy"></p>
           </div></details>
@@ -137,6 +138,10 @@
             <div id="preview-scroll" class="preview-scroll"><p id="preview-empty">Choose a paper to start building its outline.</p><div id="canvas-wrap" class="canvas-wrap" hidden=""><canvas id="pdf-canvas" aria-label="PDF page preview" data-i18n-aria-label="canvas"></canvas><div id="destination" class="destination" hidden=""><span data-i18n="destination">Bookmark position</span></div></div></div>
             <div class="preview-footer"><span id="preview-tip">Select a bookmark to check its position in the paper.</span><button id="cancel" class="quiet small" hidden="" data-i18n="cancel">Cancel detection</button></div>
           </section>
+        </div>
+        <div class="export-bar" role="region" aria-label="Export PDF" data-i18n-aria-label="export.region">
+          <p id="export-note" data-i18n="export.copy">Save a new copy. Your original stays unchanged.</p>
+          <button id="export-bottom" class="primary" disabled data-i18n="export" aria-describedby="export-note">Export PDF ↗</button>
         </div>
       </section>
     </section>

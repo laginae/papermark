@@ -12,7 +12,7 @@ Open the [community listing](https://community.obsidian.md/plugins/papermark) an
 
 For manual installation:
 
-1. Download **PaperMark-0.9.3-obsidian.zip** from the [0.9.3 release](https://github.com/laginae/papermark/releases/tag/0.9.3).
+1. Download **PaperMark-0.9.4-obsidian.zip** from the [0.9.4 release](https://github.com/laginae/papermark/releases/tag/0.9.4).
 2. Extract the `papermark` folder into your vault's `.obsidian/plugins/` folder. It must contain `main.js`, `manifest.json` and `styles.css` directly, without an extra nested folder.
 3. Restart Obsidian or reload its plugins, then enable **PaperMark** under **Settings → Community plugins**.
 4. Click the PaperMark ribbon icon or run **PaperMark: Open workspace** from the command palette.
