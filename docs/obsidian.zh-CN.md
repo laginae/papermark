@@ -6,12 +6,16 @@
 
 ## 安装
 
-1. 从 [0.9.1 发布页](https://github.com/laginae/papermark/releases/tag/0.9.1)下载 **PaperMark-0.9.1-obsidian.zip**。
+打开[社区插件页面](https://community.obsidian.md/plugins/papermark)，选择 **Add to Obsidian**，或在“设置 → 第三方插件 → 浏览”中搜索 **PaperMark**，安装后启用。
+
+手动安装步骤：
+
+1. 从 [0.9.2 发布页](https://github.com/laginae/papermark/releases/tag/0.9.2)下载 **PaperMark-0.9.2-obsidian.zip**。
 2. 解压后，把 `papermark` 文件夹放进笔记库的 `.obsidian/plugins/` 下。文件夹内应直接包含 `main.js`、`manifest.json` 和 `styles.css`，不要再多套一层目录。
 3. 重启 Obsidian 或重新加载插件，在“设置 → 第三方插件”中启用 **PaperMark**。
 4. 点击侧栏的 PaperMark 图标，或在命令面板运行 **PaperMark: Open workspace**。
 
-这是手动安装版，尚未提交或通过 Obsidian 社区插件目录审核。无需安装 Node.js。插件已包含 PDF 引擎、内置 OCR 及中英文识别数据，首次使用也无需下载模型。
+无需安装 Node.js。插件已包含 PDF 引擎、内置 OCR 及中英文识别数据，首次使用也无需下载模型。
 
 ## 将图片合并为可搜索的 PDF
 
@@ -43,6 +47,8 @@ Windows x64 配置方法：
 此助手与 **MinerU 连接助手** 不同。Windows 助手不能在 macOS/Linux 运行，其他平台的原生助手尚待验证，目前请使用内置 OCR。插件包含桌面端原生 OCR 适配接口，因此仅支持 Obsidian 桌面端；其他设备仍可使用独立网页版。
 
 ## 隐私和兼容范围
+
+内置 OCR 模型使 `main.js` 约为 17 MB，超过 Obsidian Sync Standard 的 5 MB 单文件限制。该套餐用户应在每台桌面设备上分别安装插件。
 
 - 默认本地处理，无统计追踪，不自动上传文档。
 - MinerU 仍需主动选择，使用自己的 Token，并通过本机 MinerU 连接助手转发。每份 PDF 上传前均要求明确确认。Obsidian 请使用 PaperMark 0.8.0 或更新版的连接助手；详情见 [MinerU 说明](mineru.md)。

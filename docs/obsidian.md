@@ -6,12 +6,16 @@ PaperMark opens a PDF workspace inside Obsidian. It merges images into PDFs, add
 
 ## Install
 
-1. Download **PaperMark-0.9.1-obsidian.zip** from the [0.9.1 release](https://github.com/laginae/papermark/releases/tag/0.9.1).
+Open the [community listing](https://community.obsidian.md/plugins/papermark) and select **Add to Obsidian**, or search for **PaperMark** in **Settings → Community plugins → Browse**. Install and enable the plugin.
+
+For manual installation:
+
+1. Download **PaperMark-0.9.2-obsidian.zip** from the [0.9.2 release](https://github.com/laginae/papermark/releases/tag/0.9.2).
 2. Extract the `papermark` folder into your vault's `.obsidian/plugins/` folder. It must contain `main.js`, `manifest.json` and `styles.css` directly, without an extra nested folder.
 3. Restart Obsidian or reload its plugins, then enable **PaperMark** under **Settings → Community plugins**.
 4. Click the PaperMark ribbon icon or run **PaperMark: Open workspace** from the command palette.
 
-This is a manually installed plugin release, not an approved Obsidian community-directory entry. No Node.js installation is needed. PDF rendering, built-in OCR and English/Chinese recognition data are bundled in the plugin; they do not download on first use.
+No Node.js installation is needed. PDF rendering, built-in OCR and English/Chinese recognition data are bundled in the plugin; they do not download on first use.
 
 ## Images to a searchable PDF
 
@@ -43,6 +47,8 @@ The helper starts only for a Paddle OCR task. Pixels pass through local process 
 The helper is optional and separate from the **MinerU helper**. The Windows helper does not run on macOS/Linux. Native helper builds for those systems require separate validation; use built-in OCR there for now. The Obsidian plugin is desktop-only because its native OCR adapter uses desktop APIs. The standalone browser edition remains available on other devices.
 
 ## Privacy and compatibility
+
+The bundled OCR models make `main.js` about 17 MB, above Obsidian Sync Standard's 5 MB file limit. Install the plugin separately on each desktop device if your plan cannot sync it.
 
 - Default processing stays on the device. The plugin has no analytics and no automatic document uploads.
 - MinerU remains opt-in. It needs your own Token and the existing local MinerU connection helper. Each document requires explicit whole-PDF upload consent. Use the PaperMark 0.8.0 helper or newer for the Obsidian origin. Token handling and saved-result imports work as in the browser version; see the [MinerU guide](mineru.md).

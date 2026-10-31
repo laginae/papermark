@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+
+- Link the author profile as requested by community review.
+- Add community-directory installation instructions and disclose the bundled plugin size for Obsidian Sync Standard users.
+- Keep the application behavior from 0.9.1 unchanged.
+
 ## 0.9.1
 
 - Prepare community-directory distribution with a release tag matching the manifest version exactly and explicit desktop compatibility for the native OCR adapter.

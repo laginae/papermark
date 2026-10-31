@@ -2,11 +2,13 @@
 
 [简体中文](README.zh-CN.md)
 
-Give research papers a clickable outline. PaperMark detects section headings in PDFs, lets you review and edit the bookmarks, and exports a new PDF. The default mode runs locally in your browser, including without an internet connection. Optional MinerU processing requires a separate upload confirmation.
+Give research papers a clickable outline. PaperMark detects section headings in PDFs, lets you review and edit the bookmarks, and exports a new PDF. The default mode runs locally in desktop Obsidian or your browser, including without an internet connection. Optional MinerU processing requires a separate upload confirmation.
 
 ## Obsidian plugin
 
-PaperMark runs inside **desktop Obsidian** on Windows, macOS and Linux. Download **PaperMark-0.9.1-obsidian.zip** from the [release](https://github.com/laginae/papermark/releases/tag/0.9.1) and follow the [installation guide](docs/obsidian.md). Community-directory approval is not yet confirmed. Built-in OCR is bundled and free; it needs no account, installation of Node.js, or first-run download. Paddle Small/Tiny is an optional Windows x64 engine.
+PaperMark runs inside **desktop Obsidian** on Windows, macOS and Linux. Install it from the [Obsidian Community directory](https://community.obsidian.md/plugins/papermark), or search for **PaperMark** under **Settings → Community plugins → Browse**, then install and enable it. Manual installation is also available in the [installation guide](docs/obsidian.md). Built-in OCR is bundled and free; it needs no account, installation of Node.js, or first-run download. Paddle Small/Tiny is an optional Windows x64 engine.
+
+The self-contained plugin is about 17 MB because it includes OCR models. This exceeds the Obsidian Sync Standard 5 MB file limit; install the plugin separately on each desktop device when using that plan.
 
 Local mode makes no document-related network requests. You choose which vault or device files to open and where to save new outputs. Optional Paddle OCR executes the user-configured Cozy OCR program, which may be outside the vault, and reads its adjacent models/runtime files. It receives page pixels through local process pipes. The plugin does not automatically download or update that helper.
 

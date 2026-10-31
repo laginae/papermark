@@ -2,11 +2,13 @@
 
 [English](README.md)
 
-为论文 PDF 添加可以跳转的书签目录。自动识别章节标题，核对和编辑后导出新的 PDF。默认模式在浏览器本机处理，支持离线使用；可选 MinerU 模式需要另行确认上传。
+为论文 PDF 添加可以跳转的书签目录。自动识别章节标题，核对和编辑后导出新的 PDF。默认模式在 Obsidian 桌面端或浏览器本机处理，支持离线使用；可选 MinerU 模式需要另行确认上传。
 
 ## Obsidian 插件
 
-PaperMark 支持 Windows、macOS、Linux 的 **Obsidian 桌面端**。从[发行版](https://github.com/laginae/papermark/releases/tag/0.9.1)下载 **PaperMark-0.9.1-obsidian.zip**，按[安装说明](docs/obsidian.zh-CN.md)操作。尚未确认通过社区目录审核。内置 OCR 免费且随插件打包，不需要账号、Node.js 或首次联网下载。Paddle Small/Tiny 是可选的 Windows x64 引擎。
+PaperMark 支持 Windows、macOS、Linux 的 **Obsidian 桌面端**。从 [Obsidian 社区插件目录](https://community.obsidian.md/plugins/papermark)安装，或在“设置 → 第三方插件 → 浏览”中搜索 **PaperMark**，安装后启用。也可按[安装说明](docs/obsidian.zh-CN.md)手动安装。内置 OCR 免费且随插件打包，不需要账号、Node.js 或首次联网下载。Paddle Small/Tiny 是可选的 Windows x64 引擎。
+
+插件内置 OCR 模型，大小约 17 MB，超过 Obsidian Sync Standard 的 5 MB 单文件限制。使用该同步套餐时，请在每台桌面设备上分别安装插件。
 
 本地模式不发出与文档有关的网络请求。由你选择库内或设备文件，并将输出另存为新文件。可选 Paddle OCR 会执行你在设置中指定的 Cozy OCR 程序，该程序及其相邻模型、运行库可能位于笔记库之外；页面像素通过本机进程管道传递。插件不会自动下载或更新助手。
 
