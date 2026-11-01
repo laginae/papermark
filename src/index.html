@@ -47,6 +47,15 @@
             <button id="mode-mineru" type="button" aria-pressed="false" data-i18n="flow.online">MinerU online recognition</button>
           </div>
           <p id="flow-unavailable" class="flow-note" role="status" hidden></p>
+          <details id="ocr-guide" class="flow-help ocr-guide"><summary data-i18n="guide.title">Which OCR should I choose?</summary>
+            <table class="ocr-guide-table"><thead><tr><th data-i18n="guide.engine">Engine</th><th data-i18n="guide.use">When to try it</th><th data-i18n="guide.where">Processing</th></tr></thead><tbody>
+              <tr><th data-i18n="guide.builtin">Default · Tesseract</th><td data-i18n="guide.builtinUse"></td><td data-i18n="guide.local"></td></tr>
+              <tr><th>Paddle Tiny</th><td data-i18n="guide.tinyUse"></td><td data-i18n="guide.paddleWhere"></td></tr>
+              <tr><th>Paddle Small</th><td data-i18n="guide.smallUse"></td><td data-i18n="guide.paddleWhere"></td></tr>
+              <tr><th>MinerU</th><td data-i18n="guide.mineruUse"></td><td data-i18n="guide.upload"></td></tr>
+            </tbody></table>
+            <p data-i18n="guide.accuracy"></p><p data-i18n="guide.textLayer"></p><p data-i18n="guide.helpers"></p>
+          </details>
           <div id="local-panel">
             <div class="mode-switch book-mode-switch" role="group" data-i18n-aria-label="book.task"><button id="paper-mode" aria-pressed="true" data-i18n="book.paper"></button><button id="book-mode" aria-pressed="false" data-i18n="book.mode"></button></div>
             <div id="paper-panel" class="local-next"><div><h3 id="local-heading"></h3><p id="local-description" class="flow-note"></p></div><button id="local-start" class="primary" aria-describedby="local-description"></button></div>
@@ -68,16 +77,18 @@
           </div>
           <div id="mineru-panel" hidden>
             <p class="mineru-warning" data-i18n="flow.uploadNotice">This mode sends the entire selected PDF to MinerU via your local helper. Upload starts only after your confirmation.</p>
+            <p class="flow-note" data-i18n="connection.textLayer"></p>
+            <div class="helper-status"><div class="helper-status-row"><strong id="mineru-connection-status" role="status" aria-live="polite"></strong><div class="helper-status-actions"><button id="mineru-check" class="outline-button" data-i18n="connection.check" hidden>Check connection</button><button id="mineru-disconnect" class="quiet" data-i18n="connection.disconnect" data-i18n-title="connection.disconnectHelp" hidden>Disconnect</button></div></div><p class="flow-note" data-i18n="connection.boundary"></p></div>
             <ol id="mineru-steps" class="flow-steps" aria-label="MinerU steps" data-i18n-aria-label="flow.steps"><li id="step-marker-1" data-i18n="flow.step1">1 Connect helper</li><li id="step-marker-2" data-i18n="flow.step2">2 Enter Token</li><li id="step-marker-3" data-i18n="flow.step3">3 Confirm upload</li></ol>
             <div id="mineru-working" class="flow-note" role="status" hidden data-i18n="flow.working">Processing this PDF. Progress and Cancel are below.</div>
             <div id="mineru-complete" hidden><h3 data-i18n="flow.resultReady">Recognition result is ready</h3><p class="flow-note" data-i18n="flow.reviewHelp">Review the bookmarks below, then export a new PDF. Original pages and existing or edited bookmarks are retained.</p><div class="flow-actions"><button id="mineru-review" class="primary" data-i18n="flow.review">Review bookmarks</button><button id="mineru-retry" class="quiet" data-i18n="flow.rerun">Recognize again</button></div></div>
             <section id="mineru-step-1" aria-labelledby="connect-heading">
               <h3 id="connect-heading" tabindex="-1" data-i18n="flow.connectTitle">Connect the helper on this computer</h3>
-              <p class="flow-note" data-i18n="flow.startHelper">First use: download, extract, then double-click PaperMark-MinerU.exe. Keep its window open.</p>
+              <details class="flow-help"><summary data-i18n="connection.firstUse">First use: download and start the helper</summary><p class="flow-note" data-i18n="flow.startHelper">First use: download, extract, then double-click PaperMark-MinerU.exe. Keep its window open.</p>
               <a class="helper-download" href="https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip" target="_blank" rel="noopener noreferrer" data-i18n="flow.download">Download Windows helper · ZIP</a>
-              <p class="flow-note" data-i18n="flow.copyCode">On the helper's control page, click “Copy connection code”, then paste it here.</p>
+              </details><p class="flow-note" data-i18n="flow.copyCode">On the helper's control page, click “Copy connection code”, then paste it here.</p>
               <label class="flow-field"><span data-i18n="mineru.code">Helper connection code</span><input id="mineru-code" type="password" autocomplete="off" spellcheck="false" maxlength="48" aria-describedby="connection-note"></label>
-              <div class="flow-actions"><button id="mineru-connect" class="primary" data-i18n="flow.connect">Connect helper</button><span id="mineru-connection-status" role="status"></span></div>
+              <div class="flow-actions"><button id="mineru-connect" class="primary" data-i18n="flow.connect">Connect helper</button><span class="flow-note" data-i18n="flow.needCode"></span></div>
               <p id="connection-note" class="flow-note" data-i18n="flow.connectionOnly">This step only connects the helper; it does not upload your PDF. Allow local network access if asked.</p>
             </section>
             <section id="mineru-step-2" hidden aria-labelledby="token-heading">

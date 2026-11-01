@@ -1,8 +1,8 @@
 {
   "app": "PaperMark",
-  "version": "0.9.4",
-  "bytes": 16831067,
-  "sha256": "3dc03db1f738da7bb9480327bf591cdba6071946c301cabe0951cf07f342ff7b",
+  "version": "0.9.5",
+  "bytes": 16841487,
+  "sha256": "b778075d8fee0cc0fd906d3ea798c6682d1218c9d5f9a98e9a085a2e923b12fb",
   "offlineResources": 186,
   "dependencies": {
     "@tesseract.js-data/chi_sim": "1.0.0",
@@ -15,13 +15,13 @@
   "plugin": [
     {
       "file": "obsidian/main.js",
-      "bytes": 16959590,
-      "sha256": "3f4062df6c5f81c06e4d9070a1584aa45e61d453f6d983f6964b3e9e735076bf"
+      "bytes": 16975738,
+      "sha256": "93a54ad113d9c834f21a179b5f06c3305c5b80f111a8f90761119b6fbad18a0b"
     },
     {
       "file": "obsidian/manifest.json",
       "bytes": 348,
-      "sha256": "2320358950570c72df83b0c3e6a3e2ad459a22a08df0e3eb414047bb29ace1b6"
+      "sha256": "b2fc05c6f256ac82441f313a238fd4d2e27d40936839a198bc383a579e6c27f3"
     },
     {
       "file": "obsidian/styles.css",
@@ -32,12 +32,12 @@
   "helper": {
     "file": "PaperMark-MinerU-helper.cjs",
     "bytes": 563100,
-    "sha256": "af6d65cfc8b792b408d4d1ad5ba30bf7466f54f06fff6615cc08e57bbce36216"
+    "sha256": "c857459df52c8893003fedb62c36ea619c8ee26594d6e9982691c2f5ec915a12"
   },
   "web": {
     "file": "index.html",
-    "bytes": 6593645,
-    "sha256": "14ae3575b5ec22fc4948982e6a6ea6ca487946c1161aa4c73ca45698ec6a0055"
+    "bytes": 6604065,
+    "sha256": "5a02dcfa2fee7aff21a8502e9129540b3829e146494a970e1c1296e8681ae3e6"
   },
   "ocr": {
     "file": "ocr-resources-eb7384bf600b.json",

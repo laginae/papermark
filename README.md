@@ -66,6 +66,10 @@ Local OCR uses higher-resolution images, contrast adjustment and correction of s
 
 Choose **Book contents pages** in local mode, enter the PDF pages containing the printed contents, then **Read contents → Auto-calibrate pages → Review and apply**. The separate draft supports single/two-column layouts, hierarchy editing, Roman front matter, chapter-local page numbers and manual page anchors. Existing bookmarks are kept by default. Only completed OCR pages gain searchable text; run All pages OCR for the entire book. See the [book contents guide](docs/book-contents.md) for the sampling limits and review steps.
 
+## Choosing OCR
+
+Open **Which OCR should I choose?** in the recognition area or **How to use** for a concise comparison of built-in Tesseract, Paddle Tiny, Paddle Small and MinerU. It distinguishes local processing from whole-PDF uploads and explains searchable text layers. These are selection tips, not a universal accuracy ranking. See the [OCR guide](docs/ocr-guide.md).
+
 ## Optional MinerU high precision
 
 After adding a PDF, select **MinerU online recognition** to follow three steps: **Connect helper → Enter Token → Confirm upload**. Every user enters their own API Token; it is never embedded in the app or saved. On Windows 10/11 x64, download [the helper ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip), extract it and double-click `PaperMark-MinerU.exe` — no Node.js installation or commands. Its control page provides a connection code and a Stop button. The guide is available in English and Chinese. The script helper remains available for other desktop systems with Node.js.

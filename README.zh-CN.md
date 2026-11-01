@@ -66,6 +66,10 @@ OCR 生成的书签均标记为建议核对，请检查标题和跳转位置后�
 
 在本地模式选择 **图书目录页**，填写目录所在的 PDF 页码，按 **识别目录 → 自动校准页码 → 核对并应用** 操作。独立草稿支持单/双栏目录、层级编辑、罗马数字前言、分章页码和人工页码对应，默认保留已有书签。只有完成 OCR 的页面会添加文字层；需要整本书都可搜索时，请运行“全部页面”OCR。抽样范围和核对方法见[图书目录使用说明](docs/book-contents.zh-CN.md)。
 
+## 如何选择 OCR
+
+在识别区域或 **使用说明** 中展开 **如何选择 OCR 引擎？**，可查看内置 Tesseract、Paddle Tiny、Paddle Small 和 MinerU 的建议用途、本地/在线处理区别及可搜索文本层说明。这是选择建议，不是通用精度排名，详见 [OCR 指南](docs/ocr-guide.zh-CN.md)。
+
 ## 可选 MinerU 高精度
 
 添加 PDF 后，可选择 **MinerU 在线识别**，按“连接助手 → 填写 Token → 确认上传”操作；默认仍为本地模式。每位用户填写自己的 API Token，密钥不会嵌入应用或保存。Windows 10/11 x64 用户可下载[免安装助手 ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip)，解压后双击 `PaperMark-MinerU.exe`，无需安装 Node.js 或输入命令。自动打开的本机控制页提供复制连接码和停止助手按钮。其他桌面系统仍可使用需要 Node.js 的脚本助手。

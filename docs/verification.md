@@ -2,6 +2,14 @@
 
 The release was checked with synthetic PDFs. No personal research papers are included in the repository or release archives.
 
+## Connection status and OCR guidance in 0.9.5
+
+- All 76 automated tests and the Obsidian JavaScript guideline checks pass. Added interaction tests cover persistent translated status, mode changes, health-check failures, visible/idle monitoring, disconnect races and workspace disposal.
+- English and Chinese browser checks cover the OCR guide in both the workspace and Help, persistent connection status in later steps, explicit upload consent, and 390-pixel layouts without horizontal document overflow.
+- A running local helper is paired, checked and stopped to verify recovery. Switching modes retains the session connection while clearing the Token and consent; stopping the helper displays the lost-connection state and returns to pairing. Instrumentation records zero PDF uploads, zero Token-bearing requests and zero external OCR calls.
+- A real browser export of the four-page synthetic paper retains nine bookmarks. Independent PDF read-back and page rendering confirm preserved text, geometry and page pixels.
+- Recognition and PDF text-layer algorithms are unchanged. The guide explains selection tradeoffs without asserting a universal accuracy ranking; no paid OCR service is called for this update.
+
 ## Export controls in 0.9.4
 
 - All 69 automated tests and the Obsidian JavaScript guideline checks pass.
@@ -29,7 +37,7 @@ The release was checked with synthetic PDFs. No personal research papers are inc
 
 ## Automated checks
 
-`npm test` passes 48 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion, searchable export, the guided recognition flow and startup recovery.
+`npm test` passes 76 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion, searchable export, images to PDF, scanned-book contents, Paddle integration, the guided recognition flow and startup recovery.
 
 Language checks cover the English default, stored preference, unavailable browser storage, translation key/placeholder completeness, document language and accessible labels. Searchable export tests cover PDF text extraction, unchanged rendered pixels, retained outlines and annotations, 0/90/180/270-degree rotations with crop offsets, duplicate-layer prevention, disabled text layers, no-heading export and explicitly cleared bookmarks. Chinese spacing normalization retains English word spaces.
 

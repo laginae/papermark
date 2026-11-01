@@ -4,7 +4,11 @@ MinerU mode is **off by default**. Local OCR and offline export remain available
 
 ## Use the online mode
 
-Add your PDF first, then choose **MinerU online recognition**. The page shows only the current setup step.
+Add your PDF first, then choose **MinerU online recognition**. The current setup step is shown beneath a persistent local-helper status. First-time download instructions are under **First use: download and start the helper**.
+
+The status distinguishes not connected, connecting, checking, connected and connection lost. **Check connection** only contacts the local helper; it does not validate a Token or upload a PDF. **Disconnect** clears this page's connection without stopping the helper. The connection stays in page memory across mode and document changes, with local health checks while visible and idle in online mode. Token and upload consent are still cleared on each mode or document change and on connection loss. Refreshing or closing the page requires connecting again.
+
+MinerU also supplies text for **searchable/copyable PDF export**. The service recognizes text and layout; PaperMark writes the invisible text layer locally when you export with **Export searchable PDF** enabled. This keeps original pages and current bookmarks, but the recognition step still uploads the entire PDF after confirmation. See [OCR selection and text-layer guidance](ocr-guide.md); Paddle and MinerU use different helpers.
 
 1. **Windows 10/11 x64:** download [PaperMark-MinerU-Windows-x64.zip](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip), extract it, and double-click **PaperMark-MinerU.exe**. No Node.js installation, commands or administrator access are needed. Keep its program window open. It automatically opens a local control page at `http://127.0.0.1:8768/`.
 2. Click **Copy connection code** on the control page, then **Open PaperMark**. Choose **MinerU online recognition**, paste the code into **Helper connection code**, and click **Connect helper**. If the browser asks, allow local network access. This connection code is not the MinerU Token.
@@ -33,6 +37,10 @@ Search/copy uses the returned text in an invisible layer, with local OCR line po
 ## 中文使用说明
 
 默认关闭在线模式；本地 OCR、书签和可搜索 PDF 导出继续离线运行，无需 Token。
+
+面板会持续显示本机助手的未连接、正在连接、正在检查、已连接或连接断开状态。下载说明收在 **首次使用：下载并启动助手** 中。**检查连接**只访问本机助手，不验证 Token、不上传 PDF；**断开**只清除此页面的连接，不会关闭助手程序。连接在当前页面内存中保留，切换模式或文档不需要重复粘贴连接码，但 Token 和上传确认仍会清空。在线模式下页面可见且空闲时会检查助手；连接失效同样清空 Token 和确认，刷新或关闭页面后需要重新连接。
+
+MinerU 也用于 **可搜索、复制的 PDF 文本层**：服务返回文字与版面，PaperMark 在本机导出时写入隐形文字层，保留原页面和当前书签。请保持 **导出可搜索 PDF** 开启。文本层在本机写入不代表在线识别也在本机完成，整份 PDF 仍会在确认后上传。Paddle 与 MinerU 使用不同助手，详见 [OCR 选择与文本层说明](ocr-guide.zh-CN.md)。
 
 1. **Windows 10/11 x64：**下载 [Windows 免安装助手 ZIP](https://github.com/laginae/papermark/releases/latest/download/PaperMark-MinerU-Windows-x64.zip)，解压后双击 **PaperMark-MinerU.exe**。无需安装 Node.js、输入命令或管理员权限。保持程序窗口打开，它会自动在默认浏览器打开本机控制页 `http://127.0.0.1:8768/`。
 2. 在控制页点击 **复制连接码**，再点击 **打开 PaperMark**。先添加 PDF，再选择 **MinerU 在线识别**，将代码粘贴到 **助手连接码** 并点击 **连接助手**。如浏览器询问，允许访问本地网络。连接码不是 API Token。

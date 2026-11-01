@@ -6,11 +6,12 @@ function createRecognitionFlow(root, {connect, onRun, onLocal, onReview, onMode}
   const $ = id => root.getElementById(id);
   let doc = null, busy = false, online = false, client = null, step = 1;
   let generation = 0, connecting = false, errorKey = '', retry = false;
+  let checking = false, disconnected = false, disposed = false;
   const validToken = () => /^[A-Za-z0-9_.+=/-]{20,2048}$/.test($('mineru-token').value.trim());
   const ready = () => !!doc?.model && doc.status === 'ready' && !doc.error;
   const eligible = () => ready() && doc.writable && doc.pdf.numPages <= 200;
   const clearConsent = () => { $('mineru-consent').checked = false; };
-  const canUpload = () => online && step === 3 && !busy && eligible() && !!client && validToken() && $('mineru-consent').checked;
+  const canUpload = () => !disposed && online && step === 3 && !busy && !checking && eligible() && !!client && validToken() && $('mineru-consent').checked;
   function render() {
     $('local-panel').hidden = online;
     $('mineru-panel').hidden = !online;
@@ -35,16 +36,23 @@ function createRecognitionFlow(root, {connect, onRun, onLocal, onReview, onMode}
       if (step === n) $('step-marker-' + n).setAttribute('aria-current', 'step');
       else $('step-marker-' + n).removeAttribute('aria-current');
     }
-    $('mineru-connect').disabled = busy || connecting || !/^[a-f0-9]{48}$/.test($('mineru-code').value.trim()) || !ready();
-    $('mineru-code').disabled = busy || connecting;
+    $('mineru-connect').disabled = busy || connecting || checking || !/^[a-f0-9]{48}$/.test($('mineru-code').value.trim()) || !ready();
+    $('mineru-code').disabled = busy || connecting || checking;
     $('mineru-token').disabled = busy;
-    $('mineru-connection-status').textContent = t(connecting ? 'flow.connecting' : client ? 'mineru.connected' : 'flow.needCode');
-    $('mineru-next').disabled = busy || !client;
+    const connectionState = connecting ? 'connecting' : checking ? 'checking' : client ? 'connected' : disconnected ? 'lost' : 'idle';
+    $('mineru-connection-status').textContent = t('connection.' + connectionState);
+    $('mineru-connection-status').dataset.state = connectionState;
+    $('mineru-check').hidden = !client;
+    $('mineru-check').disabled = busy || connecting || checking;
+    $('mineru-disconnect').hidden = !client && !connecting;
+    $('mineru-disconnect').disabled = busy;
+    $('step-marker-1').classList.toggle('complete', !!client && !checking);
+    $('mineru-next').disabled = busy || checking || !client;
     $('mineru-consent').disabled = busy || !eligible();
     $('mineru-upload-file').textContent = doc ? t('flow.uploadFile', {name:doc.name, pages:doc.pdf?.numPages || 0}) : '';
     $('mineru-consent-label').textContent = doc ? t('flow.consent', {name:doc.name}) : '';
     $('mineru-run').disabled = !canUpload();
-    $('mineru-run-hint').textContent = t(busy ? 'flow.working' : !eligible() ? 'flow.uploadUnavailable' : !client ? 'mineru.disconnected' : !validToken() ? 'mineru.tokenError' : !$('mineru-consent').checked ? 'flow.needConsent' : 'flow.readyUpload');
+    $('mineru-run-hint').textContent = t(busy ? 'flow.working' : !eligible() ? 'flow.uploadUnavailable' : checking ? 'connection.checking' : !client ? 'mineru.disconnected' : !validToken() ? 'mineru.tokenError' : !$('mineru-consent').checked ? 'flow.needConsent' : 'flow.readyUpload');
     $('mineru-flow-error').hidden = !errorKey;
     $('mineru-flow-error').textContent = errorKey ? t(errorKey) : '';
     $('mineru-import').disabled = busy || !ready() || !doc.writable;
@@ -58,34 +66,66 @@ function createRecognitionFlow(root, {connect, onRun, onLocal, onReview, onMode}
     $(next === 1 ? 'connect-heading' : next === 2 ? 'token-heading' : 'upload-heading').focus();
   }
   function mode(value) {
-    if (busy || online === value) return;
-    online = value; generation++; connecting = false; errorKey = ''; retry = false;
-    client = null; $('mineru-code').value = ''; $('mineru-token').value = ''; step = 1; clearConsent();
+    if (disposed || busy || online === value) return;
+    online = value; generation++; connecting = false; checking = false; errorKey = ''; retry = false;
+    $('mineru-token').value = ''; step = client ? 2 : 1; clearConsent();
     render(); onMode();
+    if (online && client) void checkConnection();
   }
+  function loseConnection() {
+    client = null; checking = false; disconnected = true; step = 1;
+    $('mineru-token').value = ''; clearConsent(); errorKey = 'mineru.connectionError';
+  }
+  async function checkConnection() {
+    if (disposed || !online || !client || !doc || busy || connecting || checking) return;
+    const attempt = ++generation, connected = client;
+    checking = true; render();
+    try {
+      await connected.check();
+      if (disposed || attempt !== generation || client !== connected) return;
+      checking = false; disconnected = false;
+    } catch {
+      if (disposed || attempt !== generation || client !== connected) return;
+      loseConnection();
+    }
+    render();
+  }
+  function disconnect() {
+    if (busy || disposed) return;
+    generation++; client = null; connecting = checking = disconnected = false;
+    $('mineru-code').value = ''; $('mineru-token').value = ''; clearConsent();
+    step = 1; errorKey = ''; render();
+  }
+  const win = root.defaultView;
+  const monitor = () => { if (!root.hidden) return checkConnection(); };
+  const timer = win.setInterval(monitor, 30000);
+  win.addEventListener('focus', monitor);
+  root.addEventListener('visibilitychange', monitor);
+  $('mineru-check').onclick = checkConnection;
+  $('mineru-disconnect').onclick = disconnect;
   $('mode-local').onclick = () => mode(false);
   $('mode-mineru').onclick = () => mode(true);
   $('local-start').onclick = () => {
     if (busy || !ready()) return;
     if (doc.model.imagePages.some(n => !doc.model.pages[n - 1].ocrLayout)) onLocal(); else onReview();
   };
-  $('mineru-code').oninput = () => {generation++; client = null; connecting = false; clearConsent(); errorKey = ''; render();};
+  $('mineru-code').oninput = () => {generation++; client = null; connecting = checking = disconnected = false; $('mineru-token').value = ''; clearConsent(); errorKey = ''; render();};
   $('mineru-token').oninput = () => {clearConsent(); errorKey = ''; render();};
   $('mineru-consent').onchange = render;
   $('mineru-connect').onclick = async () => {
-    if (busy || connecting || !ready() || !online) return;
+    if (disposed || busy || connecting || checking || !ready() || !online) return;
     const attempt = ++generation; connecting = true; errorKey = ''; render();
     try {
       const connected = await connect($('mineru-code').value.trim());
-      if (attempt !== generation || !online) return;
-      client = connected; connecting = false; go(2);
+      if (disposed || attempt !== generation || !online) return;
+      client = connected; connecting = false; disconnected = false; go(2);
     } catch {
-      if (attempt !== generation) return;
-      client = null; connecting = false; errorKey = 'mineru.connectionError'; render();
+      if (disposed || attempt !== generation) return;
+      connecting = false; loseConnection(); render();
     }
   };
   $('mineru-next').onclick = () => {
-    if (busy || !client || !online) return;
+    if (busy || checking || !client || !online) return;
     if (!validToken()) {errorKey = 'mineru.tokenError'; render(); $('mineru-token').focus(); return;}
     go(3);
   };
@@ -97,12 +137,15 @@ function createRecognitionFlow(root, {connect, onRun, onLocal, onReview, onMode}
   return {
     isOnline: () => online,
     update(context) {
-      if (context.doc !== doc) {
+      if (disposed) return;
+      const changed = context.doc !== doc;
+      if (changed) {
         // Consent and Token never transfer to another PDF, even while connecting.
-        generation++; connecting = false; $('mineru-token').value = ''; clearConsent();
+        generation++; connecting = checking = false; $('mineru-token').value = ''; clearConsent();
         step = client ? 2 : 1; errorKey = ''; retry = false;
       }
       doc = context.doc; busy = context.busy; render();
+      if (changed && client) void checkConnection();
     },
     takeUpload() {
       if (!canUpload()) return null;
@@ -112,8 +155,14 @@ function createRecognitionFlow(root, {connect, onRun, onLocal, onReview, onMode}
     },
     finish(success, error) {
       retry = !success; errorKey = error?.i18nKey || (error ? 'mineru.failed' : '');
-      if (errorKey === 'mineru.connectionError') {client = null; step = 1;}
+      if (errorKey === 'mineru.connectionError') loseConnection();
       clearConsent(); render();
+    },
+    dispose() {
+      disposed = true; generation++; client = null;
+      win.clearInterval(timer); win.removeEventListener('focus', monitor);
+      root.removeEventListener('visibilitychange', monitor);
+      $('mineru-code').value = ''; $('mineru-token').value = ''; clearConsent();
     }
   };
 }

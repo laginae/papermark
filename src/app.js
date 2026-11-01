@@ -22,6 +22,9 @@ import { validateEntries, safeFilename, uniqueFilename } from './model';
 import { t, getLanguage, restoreLanguage, saveLanguage, translateDom, uiError, reasonLabel } from './i18n';
 
 const $ = id => document.getElementById(id);
+const helpOcrGuide = $('ocr-guide').cloneNode(true);
+helpOcrGuide.removeAttribute('id');
+$('help-dialog').querySelector('.dialog-body').prepend(helpOcrGuide);
 function languageStorage() { try { return window.localStorage; } catch { return null; } }
 restoreLanguage(languageStorage());
 const records = []; let current = null, scanning = false, exporting = false, composing = false, cancelled = false;
@@ -652,6 +655,6 @@ for(const button of document.querySelectorAll('[data-language]')) button.onclick
   }
   saveLanguage(button.dataset.language, languageStorage()); host.language(getLanguage());refreshLanguage();images.refresh();
 };
-window.addEventListener('papermark-dispose',()=>{cancelled=true;ocrAbort?.abort();images.dispose();for(const doc of records){doc.workerPort?.terminate();}URL.revokeObjectURL(workerUrl);});
+window.addEventListener('papermark-dispose',()=>{cancelled=true;ocrAbort?.abort();images.dispose();recognition.dispose();for(const doc of records){doc.workerPort?.terminate();}URL.revokeObjectURL(workerUrl);});
 refreshLanguage();
 window.paperMarkStartup?.ready();

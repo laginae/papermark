@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.5
+
+- Keep local-helper connection status visible throughout the MinerU workflow, with check and disconnect actions and session-only connection reuse.
+- Detect lost helper connections through local health checks; clear Tokens and upload consent on loss, mode changes and document changes. Pairing, checks and disconnecting never upload a PDF.
+- Add bilingual OCR selection guidance in the workspace and Help, including platform requirements, separate Paddle/MinerU helpers and the limits of previous accuracy comparisons.
+- Explain MinerU searchable text layers, preserved originals and explicit whole-document uploads using the user's own Token.
+- Preserve local OCR, Paddle Small, bookmark editing, scanned-book contents and both export buttons.
+
 ## 0.9.4
 
 - Keep PDF export within reach with a sticky bottom action bar; retain the original top export button.
