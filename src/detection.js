@@ -1,6 +1,6 @@
 'use strict';
 // Adapted from Note Reader's inferOutline; typography is evidence, not certainty.
-const SEMANTIC = /^(?:abstract|introduction|background|related work|literature review|materials?(?: and methods?)?|methods?|methodology|results?(?: and discussion)?|discussion|conclusions?(?: and (?:discussion|future work))?|references|bibliography|acknowledg(?:e)?ments?|appendi(?:x|ces)(?:\s+[A-Z])?|supplementary materials?|funding|author contributions?|competing interests|additional information|data availability(?: statement)?|conflicts? of interest|摘要|关键词|引言|绪论|研究方法|实验方法|结果与讨论|结果|讨论|结论|参考文献|致谢|附录(?:[A-Z一二三四五六七八九十\d]+)?)\s*[.:：。]?$/i;
+const { commonHeading, academicBlock, academicContinuation, unfinishedHeading, containsSentence, numberedProse } = require('./heading-rules');
 const NUMBER = /^(?:(\d{1,2}(?:\.\d{1,2}){0,5})\.?\s+|([IVXLC]+)[.)]\s+|(第[一二三四五六七八九十百零〇\d]+[章节])\s*|([A-H])[.)]\s+)(\S.+)$/;
 function numbering(text) {
   const m = text.match(NUMBER);
@@ -60,10 +60,11 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
   }
   const bodyHeight = [...weights].sort((a,b) => b[1] - a[1])[0]?.[0] || 10;
   const bodyFont = [...fontWeights].sort((a,b)=>b[1]-a[1])[0]?.[0];
-  const headingFonts = new Set();
+  const headingFonts = new Set(), lineStyles = new WeakMap();
   for (const page of pages) for (const line of page.lines) {
     const style = styleFor(line,page,bodyHeight);
-    if (SEMANTIC.test(line.text.trim()) && style.size >= bodyHeight*.94) headingFonts.add(style.font);
+    lineStyles.set(line, style);
+    if (commonHeading(line.text.trim()) && style.size >= bodyHeight*.94) headingFonts.add(style.font);
   }
   const globalAnchors = new Map();
   for(const page of pages) for(const line of page.lines) if(line.text.length>65 && /[a-z]{3}/.test(line.text)) {
@@ -91,9 +92,10 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
       if (/^(?:fig(?:ure)?\.?|table|equation|eq\.?|图|表)\s*[\dIVX一二三四五六七八九十]/i.test(text)
         || /^\(?[\d.]+\)?$/.test(text) || /(?:\.{3,}|…|·{3,})\s*\d+\s*$/.test(text)
         || /https?:\/\/|doi\s*:|@|©/i.test(text)) continue;
-      const num = numbering(text), semantic = SEMANTIC.test(text);
+      const num = numbering(text), semantic = commonHeading(text);
+      if (academicBlock(text) || (!num && containsSentence(text))) continue;
       if (/^(?:appendix|appendices|附录)/i.test(text)) inReferences = false;
-      const style = styleFor(line, page, bodyHeight);
+      const style = lineStyles.get(line);
       const familiar = headingFonts.has(style.font);
       if (familiar && style.font !== bodyFont && style.size >= bodyHeight*.98) style.prominent = true;
       const aligned = !anchors.length || anchors.some(x => Math.abs(line.xMin - x) < bodyHeight * .8);
@@ -111,6 +113,8 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
         || text.length > 115 || text.split(/\s+/).length > 18
         || (!style.prominent && /[.,，]$/.test(num.body))
         || (num.kind === 'decimal' && !style.prominent && /^[a-z]/.test(num.body)))) continue;
+      const nextLine = page.lines[index + 1];
+      if (numberedProse(num, line, nextLine, style, lineStyles.get(nextLine), bodyHeight)) continue;
       if (sensitivity === 'strict' && !semantic && !style.prominent) continue;
       let title = text;
       // Wrapped headings are joined only when their typography differs from body text.
@@ -118,10 +122,11 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
       for(let continuation=0;continuation<3;continuation++) {
       const next = page.lines[index + 1];
       if (!semantic && style.prominent && next && !/[.!?。:：]$/.test(title)
-        && !numbering(next.text) && !SEMANTIC.test(next.text) && next.text.length < 85
+        && !numbering(next.text) && !commonHeading(next.text) && next.text.length < 85
+        && (!academicBlock(next.text) || academicContinuation(title, next.text)) && !containsSentence(next.text)
         && !/[.;。；]$/.test(next.text) && Math.abs(next.xMin - line.xMin) < style.size * 1.5
         && lastLine.y - next.y > style.size * .65 && lastLine.y - next.y < style.size * 1.8) {
-        const ns = styleFor(next, page, bodyHeight);
+        const ns = lineStyles.get(next);
         if (ns.font === style.font && Math.abs(ns.size - style.size) < .5) {
           title += /[\u3400-\u9fff]$/.test(title) ? next.text : ' ' + next.text; index++; lastLine=next;
         } else break;
@@ -131,10 +136,10 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
       const previous = rows.at(-1);
       if (!previous) level = 1;
       else level = Math.min(level, previous.level + 1);
-      const strong = semantic || (num && style.prominent);
+      const strong = (semantic || (num && style.prominent)) && !unfinishedHeading(title);
       rows.push({ title, level, page: page.number, offset: line.offset, x: line.xMin, headingSize: style.size, numbered: !!num,
         y: Math.min(page.view?.[3] ?? page.height, line.y + style.size * 1.15),
-        inferred: true, review: !strong, reason: semantic ? '常见章节标题' : num ? '章节编号' + (style.prominent ? '与字体特征' : '，建议核对') : '字体与版式特征，建议核对' });
+        inferred: true, review: !strong, reason: semantic ? '常见章节标题' : num ? '章节编号' + (strong ? '与字体特征' : '，建议核对') : '字体与版式特征，建议核对' });
       if (/^(?:references|bibliography|参考文献)\s*[.:：。]?$/i.test(num?.body || text)) inReferences = true;
       if (rows.length >= 1000) break;
     }
@@ -143,8 +148,8 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
   const capsStyle = rows.filter(row=>!row.numbered && /[A-Z]{3}/.test(row.title) && row.title === row.title.toUpperCase()).length >= 3;
   let previousLevel=0;
   return rows.map(row=>{
-    if (!row.numbered && !SEMANTIC.test(row.title)) row.level = Math.min(3, sizes.indexOf(Math.round(row.headingSize*2)/2)+1);
-    if (capsStyle && !row.numbered && !SEMANTIC.test(row.title) && /[a-z]/.test(row.title)) row.level = Math.max(2,row.level);
+    if (!row.numbered && !commonHeading(row.title)) row.level = Math.min(3, sizes.indexOf(Math.round(row.headingSize*2)/2)+1);
+    if (capsStyle && !row.numbered && !commonHeading(row.title) && /[a-z]/.test(row.title)) row.level = Math.max(2,row.level);
     row.level = Math.min(row.level, previousLevel+1); previousLevel=row.level;
     return row;
   });

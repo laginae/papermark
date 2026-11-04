@@ -1,5 +1,6 @@
 'use strict';
 const { detectHeadings, numbering } = require('./detection');
+const {commonHeading, academicBlock, academicTopic, academicContinuation, numberedProse} = require('./heading-rules');
 const {normalizeCjkText}=require('./ocr-pdf-spacing');
 
 // Detection uses upright page coordinates. Destinations are converted back to
@@ -31,24 +32,39 @@ function toPdfPoint(x, y, layout) {
   const px=x*layout.scale-e, py=(layout.height-y)*layout.scale-f;
   return [(d*px-c*py)/determinant,(-b*px+a*py)/determinant];
 }
-const COMMON=/^(?:abstract|introduction|background|related work|literature review|materials?(?: and methods?)?|methods?|methodology|results?(?: and discussion)?|discussion|conclusions?(?: and future work)?|references|bibliography|acknowledg(?:e)?ments?|appendi(?:x|ces)(?:\s+[A-Z])?|supplementary materials?|摘要|关键词|引言|绪论|研究方法|实验方法|结果与讨论|结果|讨论|结论|参考文献|致谢|附录)\s*[:：.]?$/i;
 function ocrHeadings(layout,{sensitivity='balanced'}={}) {
   if(layout.headings) return layout.headings;
   const body=layout.lines.filter(l=>l.text.length>25).map(l=>l.height).sort((a,b)=>a-b);
   const size=body[Math.floor(body.length/2)]||layout.bodyHeight||10;
-  return layout.lines.flatMap((line,index)=>{
-    const text=line.text.trim(),num=numbering(text),semantic=COMMON.test(text),han=/\p{Script=Han}/u.test(text);
-    if(text.length<2||text.length>(han?48:115)||text.split(/\s+/).length>15||line.y<layout.height*.035||line.y>layout.height*.975)return [];
-    if(/^(?:fig(?:ure)?\.?|table|equation|eq\.?|图|表)\s*[\dIVX一二三四五六七八九十]/i.test(text)||/https?:\/\/|doi\s*:|@|[=∑∫{}]/i.test(text))return [];
-    if(!semantic&&(/[。；;!?！？]/.test(text)||/[,，:：]/.test(text)||/\.[\s]+[A-Z]/.test(num?.body||text)))return [];
-    if(num&&(num.token.startsWith('0')||!/\p{L}/u.test(num.body)||/[.]$/.test(num.body)||num.body.split(/\s+/).length>12))return [];
+  const rows=[];
+  for(let index=0;index<layout.lines.length;index++) {
+    const line=layout.lines[index],text=line.text.trim().normalize('NFKC'),num=numbering(text),semantic=commonHeading(text),han=/\p{Script=Han}/u.test(text);
+    if(text.length<2||text.length>(han?48:115)||text.split(/\s+/).length>15||line.y<layout.height*.035||line.y>layout.height*.975)continue;
+    if(/^(?:fig(?:ure)?\.?|table|equation|eq\.?|图|表)\s*[\dIVX一二三四五六七八九十]/i.test(text)||/https?:\/\/|doi\s*:|@|[=∑∫{}]/i.test(text)||academicBlock(text))continue;
+    const explicitSection=num && (num.level>1 || num.kind==='chinese');
+    if(!semantic&&(/[。；;!?！？]/.test(text)||(!explicitSection&&/[,，:：]/.test(text))||/\.[\s]+[A-Z]/.test(num?.body||text)))continue;
+    if(num&&(num.token.startsWith('0')||!/\p{L}/u.test(num.body)||/[.]$/.test(num.body)||num.body.split(/\s+/).length>12))continue;
+    const next=layout.lines[index+1];
+    // OCR glyph height is not reliable evidence of bold/heading typography.
+    if(numberedProse(num,line,next,{size:line.height,font:'OCR'},next&&{size:next.height,font:'OCR'},size))continue;
     if(!num&&!semantic){
       const words=text.split(/\s+/),titleCase=han||words.filter(w=>/^[A-Z]/.test(w)).length>=words.length*.7;
       const previous=layout.lines[index-1],gap=previous?previous.y-line.y:Infinity;
-      if(layout.number===1||!titleCase||line.height<size*(sensitivity==='strict'?1.4:1.25)||text.length>(han?26:70)||words.length>9||gap<line.height*1.5)return [];
+      if(layout.number===1||(!titleCase&&!academicTopic(text))||line.height<size*(sensitivity==='strict'?1.4:1.25)||text.length>(han?26:70)||words.length>9||gap<line.height*1.5)continue;
     }
-    return [{title:text,level:num?.level||1,page:layout.number,offset:line.offset,x:line.xMin,y:Math.min(layout.height,line.y+line.height*1.15)}];
-  });
+    let title=text;
+    // Join an unfinished title to a bare theorem reference only with matching
+    // heading height and nearby same-column geometry. Keep source OCR intact.
+    if(next&&academicContinuation(title,next.text)&&line.height>=size*.9&&next.height>=size*.9
+      && Math.abs(next.height-line.height)<=Math.max(.5,line.height*.15)
+      && Math.abs(next.xMin-line.xMin)<line.height*1.5
+      && line.y-next.y>line.height*.65&&line.y-next.y<line.height*2.2
+      && next.y>=layout.height*.035&&next.y<=layout.height*.975){
+      title+=(/[\u3400-\u9fff]$/.test(title)?'':' ')+next.text.trim().normalize('NFKC');index++;
+    }
+    rows.push({title,level:num?.level||1,page:layout.number,offset:line.offset,x:line.xMin,y:Math.min(layout.height,line.y+line.height*1.15)});
+  }
+  return rows;
 }
 function detectWithOcr(pages, options={}) {
   const rows=detectHeadings(pages.filter(p=>!p.ocrLayout),options);

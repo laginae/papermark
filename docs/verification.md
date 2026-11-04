@@ -2,6 +2,15 @@
 
 The release was checked with synthetic PDFs. No personal research papers are included in the repository or release archives.
 
+## Heading detection in 0.9.6
+
+- All 96 automated tests and the Obsidian JavaScript guideline checks pass. Regressions cover ordinary-font declarative section titles, formal theorem-topic sections, wrapped proof titles, unrelated academic blocks, column and distance boundaries, and unchanged source offsets and geometry.
+- A generated two-page text PDF retains all eight expected bookmarks, including the complete wrapped proof title and reviewable declarative title. Export read-back confirms unchanged text and rendered pixels. Browser checks retain the selected title and all bookmarks across English/Chinese switches; the bottom export button downloads the result without console errors.
+- Text PDF detection and local OCR share semantic declarations, academic-block syntax and quantity-paragraph evidence. Uncertain text headings retain review markers in balanced mode; conservative mode keeps its stronger typography requirement. OCR results always require review. Explicit service-provided outlines remain unchanged.
+- Paddle Small and the bundled Tesseract model run locally on two generated English/Chinese scan pages. Both retain the complete English proof heading, exclude the tested theorem block and recognize the end-matter headings. The two-page exports contain extractable text and matching bookmark destinations; rendered page pixels are identical to the source.
+- In this synthetic sample, Paddle Small yields ten headings and Tesseract nine. Tesseract reads one Chinese section number with extra spaces and misses that heading. This is a remaining recognition limitation, not an accuracy ranking or proof of correctness on arbitrary documents.
+- OCR engines, dependencies, startup scanning, text-layer generation and MinerU transport are unchanged. No personal PDF, real Token or paid OCR service is used in these checks.
+
 ## Connection status and OCR guidance in 0.9.5
 
 - All 76 automated tests and the Obsidian JavaScript guideline checks pass. Added interaction tests cover persistent translated status, mode changes, health-check failures, visible/idle monitoring, disconnect races and workspace disposal.
@@ -37,7 +46,7 @@ The release was checked with synthetic PDFs. No personal research papers are inc
 
 ## Automated checks
 
-`npm test` passes 76 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion, searchable export, images to PDF, scanned-book contents, Paddle integration, the guided recognition flow and startup recovery.
+`npm test` passes 96 tests covering heading recognition, nested sections, existing bookmarks, destination validation, rotated/cropped pages, preserved annotations, file naming, signature/restriction handling, both interface languages, OCR layout conversion, searchable export, images to PDF, scanned-book contents, Paddle integration, the guided recognition flow and startup recovery.
 
 Language checks cover the English default, stored preference, unavailable browser storage, translation key/placeholder completeness, document language and accessible labels. Searchable export tests cover PDF text extraction, unchanged rendered pixels, retained outlines and annotations, 0/90/180/270-degree rotations with crop offsets, duplicate-layer prevention, disabled text layers, no-heading export and explicitly cleared bookmarks. Chinese spacing normalization retains English word spaces.
 

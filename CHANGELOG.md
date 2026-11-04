@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.6
+
+- Reduce false headings from numeric paragraphs using sentence structure, quantity context and same-column continuation evidence, without requiring consecutive section numbers.
+- Exclude theorem, proposition and proof blocks from automatic chapter detection, and keep their body text out of wrapped headings. Numbered sections about these topics remain supported.
+- Recognize common end-matter declarations and retain review flags for uncertain headings rather than dropping all weak candidates.
+- Reuse line-style analysis within each detection pass; add synthetic bilingual regressions for numbering, academic blocks, columns, wrapping, review flags and unchanged source positions.
+- Preserve same-font declarative section titles as reviewable candidates and distinguish formal theorem-topic headings from academic labels.
+- Complete wrapped proof titles only when their wording and nearby same-column geometry agree; flag incomplete text headings for review.
+- Share academic-block, quantity-paragraph and end-matter rules with local OCR; account for OCR glyph heights when joining proof titles without changing recognized text or page geometry.
+- Preserve existing and edited bookmarks, searchable text, bilingual controls, scanned-book contents and optional MinerU upload confirmation.
+
 ## 0.9.5
 
 - Keep local-helper connection status visible throughout the MinerU workflow, with check and disconnect actions and session-only connection reuse.
