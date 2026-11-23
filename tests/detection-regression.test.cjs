@@ -25,6 +25,23 @@ function page(rows, number = 2) {
 const heading = (text, size = 12) => ({ text, size, font: 'f2' });
 const titles = (p, sensitivity = 'balanced') => detectHeadings([p], { sensitivity }).map(row => row.title);
 
+test('same-size Roman chapters wrap around the column center and lettered children keep their level',()=>{
+  const body={text:'An ordinary paragraph spans the public sample column.',width:250,x:320,gap:15};
+  const head=text=>({text,x:395,width:100}),child=text=>({text,x:320,width:125,font:'f2'});
+  const p=page([body,head('I. DESIGN'),body,child('A. Setup'),body,child('B. Checks'),body,child('C. Examples'),body,
+    head('II. REPORT'),{text:'CONTINUATION',x:380,width:130,gap:13},body,head('III. SUMMARY'),body]);
+  for (const line of p.lines.slice(-5)) line.xMax=line.xMin+210;
+  for (const item of p.items.slice(-5)) item.width=210;
+  const original=JSON.stringify(p);
+  for(const sensitivity of ['balanced','strict']){
+    const r=detectHeadings([p],{sensitivity});
+    for(const [title,level] of [['I. DESIGN',1],['A. Setup',2],['B. Checks',2],['C. Examples',2],['II. REPORT CONTINUATION',1],['III. SUMMARY',1]])
+      assert.equal(r.find(e=>e.title===title)?.level,level,title);
+    assert.ok(!r.some(e=>e.title.includes('ordinary paragraph')));
+  }
+  assert.equal(JSON.stringify(p),original);
+});
+
 test('numeric paragraph continuations are not section numbers in either mode', () => {
   const p = page([
     heading('1 Introduction'),

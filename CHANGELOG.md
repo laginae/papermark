@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.7
+
+- Recognize centered Roman-numbered chapters in two-column papers even when the title and body have the same size. A lettered subsection series keeps its level, including C.
+- Join a wrapped all-caps title on its center line without absorbing body text. Existing bookmarks still take precedence; detection does not write to the original PDF.
+
 ## 0.9.6
 
 - Reduce false headings from numeric paragraphs using sentence structure, quantity context and same-column continuation evidence, without requiring consecutive section numbers.

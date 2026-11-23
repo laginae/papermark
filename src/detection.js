@@ -1,6 +1,7 @@
 'use strict';
 // Adapted from Note Reader's inferOutline; typography is evidence, not certainty.
 const { commonHeading, academicBlock, academicContinuation, unfinishedHeading, containsSentence, numberedProse } = require('./heading-rules');
+const { centerX, capitalHeading, markRomanHierarchy } = require('./vendor/pdf-heading-hierarchy');
 const NUMBER = /^(?:(\d{1,2}(?:\.\d{1,2}){0,5})\.?\s+|([IVXLC]+)[.)]\s+|(第[一二三四五六七八九十百零〇\d]+[章节])\s*|([A-H])[.)]\s+)(\S.+)$/;
 function numbering(text) {
   const m = text.match(NUMBER);
@@ -51,7 +52,7 @@ function refineLines(page) {
   return lines;
 }
 function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
-  pages = pages.map(page=>({...page, lines:refineLines(page)}));
+  pages = pages.map(page=>({...page, lines:refineLines(page).map(line=>({...line}))}));
   const weights = new Map(), repeats = new Map(), fontWeights = new Map();
   for (const page of pages) for (const item of page.items) {
     const size = Math.round((item.height || Math.abs(item.transform[3])) * 2) / 2;
@@ -60,12 +61,24 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
   }
   const bodyHeight = [...weights].sort((a,b) => b[1] - a[1])[0]?.[0] || 10;
   const bodyFont = [...fontWeights].sort((a,b)=>b[1]-a[1])[0]?.[0];
-  const headingFonts = new Set(), lineStyles = new WeakMap();
-  for (const page of pages) for (const line of page.lines) {
-    const style = styleFor(line,page,bodyHeight);
-    lineStyles.set(line, style);
-    if (commonHeading(line.text.trim()) && style.size >= bodyHeight*.94) headingFonts.add(style.font);
+  const headingFonts = new Set(), lineStyles = new WeakMap(), candidates = [];
+  for (const page of pages) {
+    const weights = new Map();
+    for (const item of page.items) weights.set(item.fontName,(weights.get(item.fontName)||0)+item.str.trim().length);
+    page.bodyFont = [...weights].sort((a,b)=>b[1]-a[1])[0]?.[0] || bodyFont;
+    for (const [index,line] of page.lines.entries()) {
+      const style = styleFor(line,page,bodyHeight);
+      lineStyles.set(line, style);
+      Object.assign(line,{font:style.font,fontSize:style.size,bold:style.bold});
+      const text = line.text.trim().normalize('NFKC'), num = numbering(text), semantic = commonHeading(num?.body || text);
+      if (commonHeading(text) && style.size >= bodyHeight*.94) headingFonts.add(style.font);
+      if (!(page.rotation % 360) && line.offset >= 0 && text.length <= 115 && (num || semantic)
+        && !containsSentence(num?.body || text) && style.size >= bodyHeight*.92)
+        candidates.push({page,index,line,text,num,semantic,prominent:style.prominent,distinct:style.font!==page.bodyFont});
+    }
   }
+  markRomanHierarchy(candidates,bodyHeight);
+  const hierarchy = new Map(candidates.filter(r=>r.romanSection || r.letterSection).map(r=>[r.line,r]));
   const globalAnchors = new Map();
   for(const page of pages) for(const line of page.lines) if(line.text.length>65 && /[a-z]{3}/.test(line.text)) {
     const x=Math.round(line.xMin/4)*4; globalAnchors.set(x,(globalAnchors.get(x)||0)+1);
@@ -92,10 +105,11 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
       if (/^(?:fig(?:ure)?\.?|table|equation|eq\.?|图|表)\s*[\dIVX一二三四五六七八九十]/i.test(text)
         || /^\(?[\d.]+\)?$/.test(text) || /(?:\.{3,}|…|·{3,})\s*\d+\s*$/.test(text)
         || /https?:\/\/|doi\s*:|@|©/i.test(text)) continue;
-      const num = numbering(text), semantic = commonHeading(text);
+      const confirmed = hierarchy.get(line), num = confirmed?.num || numbering(text), semantic = commonHeading(text);
       if (academicBlock(text) || (!num && containsSentence(text))) continue;
       if (/^(?:appendix|appendices|附录)/i.test(text)) inReferences = false;
       const style = lineStyles.get(line);
+      if (confirmed) style.prominent = true;
       const familiar = headingFonts.has(style.font);
       if (familiar && style.font !== bodyFont && style.size >= bodyHeight*.98) style.prominent = true;
       const aligned = !anchors.length || anchors.some(x => Math.abs(line.xMin - x) < bodyHeight * .8);
@@ -103,7 +117,7 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
       if (num?.kind === 'letter' && !rows.some(row => numbering(row.title))) continue;
       if (style.size < bodyHeight * .92) continue;
       if (!semantic && /[=+−×∑∫Δ∆{}\[\]\\\x00-\x08\x0e-\x1f]/.test(text)) continue;
-      if (!semantic && !aligned) continue;
+      if (!semantic && !aligned && !confirmed) continue;
       if (num && (num.token.startsWith('0') || !/^[A-Z\u3400-\u9fff]/.test(num.body))) continue;
       if (!num && !semantic && (!/^[A-Z\u3400-\u9fff]/.test(text) || text.length < 5)) continue;
       if (!num && !semantic && headingFonts.size && !familiar) continue;
@@ -124,7 +138,9 @@ function detectHeadings(pages, { sensitivity = 'balanced' } = {}) {
       if (!semantic && style.prominent && next && !/[.!?。:：]$/.test(title)
         && !numbering(next.text) && !commonHeading(next.text) && next.text.length < 85
         && (!academicBlock(next.text) || academicContinuation(title, next.text)) && !containsSentence(next.text)
-        && !/[.;。；]$/.test(next.text) && Math.abs(next.xMin - line.xMin) < style.size * 1.5
+        && !/[.;。；]$/.test(next.text) && (confirmed?.romanSection
+          ? capitalHeading(next.text.trim()) && Math.abs(centerX(next)-centerX(line)) <= style.size
+          : Math.abs(next.xMin - line.xMin) < style.size * 1.5)
         && lastLine.y - next.y > style.size * .65 && lastLine.y - next.y < style.size * 1.8) {
         const ns = lineStyles.get(next);
         if (ns.font === style.font && Math.abs(ns.size - style.size) < .5) {
